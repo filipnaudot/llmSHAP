@@ -1,16 +1,8 @@
 from __future__ import annotations
-
 import copy
-from typing import Any, Dict, Iterable, Set, Union
 
+from llmSHAP.types import Dict, Set, Index, IndexSelection, DataMapping
 
-
-# ------------------------------------------------------------------ #
-# TypeAlias
-# ------------------------------------------------------------------ #
-Index          = int
-IndexSelection = Union[Index, Iterable[Index]]
-DataMapping    = Dict[Any, Any]
 
 
 class DataHandler:
