@@ -1,2 +1,2 @@
 # llmSHAP
-![CI](https://github.com/filipnaudot/llmSHAP/actions/workflows/ci.yml/badge.svg)
+![Unit Tests](https://github.com/filipnaudot/llmSHAP/actions/workflows/test.yml/badge.svg)
