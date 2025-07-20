@@ -30,9 +30,8 @@ class DataHandler:
         """Return a *set* regardless of whether caller passed int or iterable."""
         return {selection} if isinstance(selection, int) else set(selection)
 
-    # ------------------------------------------------------------------ #
-    # Public
-    # ------------------------------------------------------------------ #
+    
+    
     def get_feature_enumeration(self) -> Dict[Index, str]:
         return self.key_enum
 
