@@ -23,10 +23,10 @@ class AttributionFunction:
         ####
         self.cache = {}
         self.result: ResultMapping = {}
-        self.value_function = EmbeddingCosineSimilarity()
+        self.similarity_function = EmbeddingCosineSimilarity()
 
     def _v(self, base_output: Generation, new_output: Generation) -> float:
-        return self.value_function(str(base_output.output), str(new_output.output))
+        return self.similarity_function(str(base_output.output), str(new_output.output))
     
     def _normalized_result(self) -> ResultMapping:
         total = sum([abs(value["score"]) for value in self.result.values()])

@@ -10,7 +10,7 @@ class SimilarityFunction(ABC):
 
 
 #########################################################
-# Basic TFIDF-based Cosine Similarity Value Funciton.
+# Basic TFIDF-based Cosine Similarity Funciton.
 #########################################################
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -27,7 +27,7 @@ class TFIDFCosineSimilarity(SimilarityFunction):
 
 
 #########################################################
-# Embedding-Based Value Funciton.
+# Embedding-Based Similarity Funciton.
 #########################################################
 from sentence_transformers import SentenceTransformer, util
 from llmSHAP.types import Optional
