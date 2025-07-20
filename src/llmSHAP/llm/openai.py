@@ -22,7 +22,7 @@ class OpenAIInterface(LLMInterface):
                  *,
                  max_tokens: int = 512,
                  temperature:int = 0,
-                 seed:int = 42):
+                 seed:int = 42) -> str:
         response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=prompt,
