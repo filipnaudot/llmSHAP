@@ -1,4 +1,8 @@
+from dataclasses import dataclass
+from llmSHAP.types import Optional
+
+
+@dataclass
 class Generation:
-    def __init__(self, output: str, score: int | None = None):
-        self.output: str = output
-        self.score: int | None = score
+    output: str
+    score: Optional[int] = None
