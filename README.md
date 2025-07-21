@@ -7,3 +7,16 @@
 
 # llmSHAP
 ![Unit Tests](https://github.com/filipnaudot/llmSHAP/actions/workflows/test.yml/badge.svg)
+
+
+
+## Getting started
+For `bash`:
+```bash
+pip install -e .[test]
+```
+
+For `zsh`:
+```zsh
+pip install -e '.[test]'
+```
