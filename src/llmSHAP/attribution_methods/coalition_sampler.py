@@ -1,9 +1,10 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Iterable, Set, Dict, Tuple, List
 from itertools import combinations
 from math import factorial
 import random
+
+from llmSHAP.types import Iterable, Set, Dict, Tuple, List
 
 
 class CoalitionSampler(ABC):
