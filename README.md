@@ -72,10 +72,12 @@ from llmSHAP import DataHandler
 data = {"a": "The", "b": "quick", "c": "brown", "d": "fox"}
 handler = DataHandler(data, permanent_key_names={"a", "d"})
 
-print(handler.get_data(1, exclude_permanent_keys=True, mask=False))
+# Get data with index 1 WITHOUT the permanent features.
+print(handler.get_data({1}, exclude_permanent_keys=True, mask=False))
 # Output: {'b': 'quick'}
 
-print(handler.get_data(1, exclude_permanent_keys=False, mask=False))
+# Get data with index 1 AND the permanent features.
+print(handler.get_data({1}, exclude_permanent_keys=False, mask=False))
 # Output: {'a': 'The', 'b': 'quick', 'd': 'fox'}
 ```
 ---
