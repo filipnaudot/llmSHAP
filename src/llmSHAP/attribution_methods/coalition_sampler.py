@@ -20,7 +20,7 @@ class CounterfactualSampler(CoalitionSampler):
         features = [key for key in keys if key != feature]
         feature_set = set(features)
         for f in features:
-                yield feature_set - {f}, 1.0
+            yield feature_set - {f}, 1.0
 
 
 class FullEnumerationSampler(CoalitionSampler):
