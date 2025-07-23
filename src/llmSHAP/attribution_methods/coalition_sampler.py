@@ -12,6 +12,17 @@ class CoalitionSampler(ABC):
     def __call__(self, feature: str, variable_keys: List[str]) -> Iterable[Tuple[Set[str], float]]: ...
 
 
+class CounterfactualSampler(CoalitionSampler):
+    def __init__(self):
+        pass
+
+    def __call__(self, feature: str, keys: List[str]):
+        features = [key for key in keys if key != feature]
+        feature_set = set(features)
+        for f in features:
+                yield feature_set - {f}, 1.0
+
+
 class FullEnumerationSampler(CoalitionSampler):
     def __init__(self, num_players: int):
         self._num_players = num_players
