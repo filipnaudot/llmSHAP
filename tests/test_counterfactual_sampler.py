@@ -1,5 +1,5 @@
 import pytest
-from llmSHAP.attribution_methods.coalition_sampler import CounterfactualSampler
+from llmSHAP.attribution_methods import CounterfactualSampler
 
 FEATURES = [
     "feat1", "feat2", "feat3", "feat4", "feat5",
