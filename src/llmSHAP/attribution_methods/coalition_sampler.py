@@ -17,10 +17,8 @@ class CounterfactualSampler(CoalitionSampler):
         pass
 
     def __call__(self, feature: str, keys: List[str]):
-        features = [key for key in keys if key != feature]
-        feature_set = set(features)
-        for f in features:
-            yield feature_set - {f}, 1.0
+        coalition = {k for k in keys if k != feature}
+        yield coalition, 1.0
 
 
 class FullEnumerationSampler(CoalitionSampler):
