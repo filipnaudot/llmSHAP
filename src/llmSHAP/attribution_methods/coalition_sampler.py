@@ -70,3 +70,46 @@ class SlidingWindowSampler(CoalitionSampler):
                 for coalition in combinations(window_features, coalition_size):
                     final_set = set(coalition) | outside
                     yield final_set, weight
+
+
+class RandomSampler(CoalitionSampler):
+    def __init__(self, sampling_ratio: float, seed: int | None = None):
+        assert 0 < sampling_ratio < 1, "sampling_ratio must be in (0,1)"
+        self.rng = random.Random(seed)
+        self.sampling_ratio = sampling_ratio
+
+    def _kernel_weight(self, subset_size: int, total_players: int) -> float:
+        return factorial(subset_size) * factorial(total_players - subset_size - 1) / factorial(total_players)
+
+    def __call__(self, feature: str, keys: List[str]):
+        others = [k for k in keys if k != feature]
+        num_other = len(others)
+        if num_other == 0: return
+
+        # Leave one out.
+        for idx, _ in enumerate(others):
+            coalition = set(others[:idx] + others[idx + 1 :])
+            weight = self._kernel_weight(len(coalition), len(keys))
+            yield coalition, weight
+
+        total_remaining = (1 << num_other) - 2 - num_other
+        if total_remaining <= 0: return
+
+        sample_size = max(1, int(self.sampling_ratio * total_remaining))
+        sample_size = min(sample_size, total_remaining)
+
+        drawn: set[frozenset] = set()
+        while len(drawn) < sample_size:
+            # Draw a random subset size in [1, num_other - 1] inclusive.
+            k = self.rng.randint(1, num_other - 1)
+            # Draw k distinct indexes.
+            indexs = self.rng.sample(range(num_other), k)
+            coalition = frozenset(others[i] for i in indexs)
+            # Skip the leave one outs.
+            if len(coalition) == num_other - 1: continue
+            drawn.add(coalition)
+
+        selection_prob = sample_size / total_remaining
+        for coalition in drawn:
+            weight = self._kernel_weight(len(coalition), len(keys)) / selection_prob
+            yield set(coalition), weight

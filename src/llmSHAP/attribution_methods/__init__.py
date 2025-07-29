@@ -3,4 +3,5 @@ from .coalition_sampler import (CoalitionSampler,
                                 FullEnumerationSampler,
                                 SlidingWindowSampler,
                                 CounterfactualSampler,
+                                RandomSampler,
                                 )
