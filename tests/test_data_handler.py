@@ -72,7 +72,7 @@ def test_get_data_no_mask():
 
 def test_permanent_keys():
     sample = {"a": 0, "b": 1, "c": 2, "d": 3}
-    handler = DataHandler(sample, permanent_key_names={"a", "d"})
+    handler = DataHandler(sample, permanent_keys={"a", "d"})
     data = handler.get_data(2, mask=False)
     expected = {"a": 0, "c": 2, "d": 3}
     
@@ -82,7 +82,7 @@ def test_permanent_keys():
 def test_get_keys_include_permanent():
     sample = {"a": 5, "b": 5, "c": 5, "d": 5}
     permanent_keys = {"b", "c"}
-    handler = DataHandler(sample, permanent_key_names=permanent_keys)
+    handler = DataHandler(sample, permanent_keys=permanent_keys)
     keys = handler.get_keys()
     expected = [0,1,2,3]
     
@@ -92,7 +92,7 @@ def test_get_keys_include_permanent():
 def test_get_keys_exclude_permanent():
     sample = {"a": 5, "b": 5, "c": 5, "d": 5}
     permanent_keys = {"b", "c"}
-    handler = DataHandler(sample, permanent_key_names=permanent_keys)
+    handler = DataHandler(sample, permanent_keys=permanent_keys)
     keys = handler.get_keys(exclude_permanent_keys=True)
     expected = [0,3]
     

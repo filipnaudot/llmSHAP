@@ -33,7 +33,7 @@ from llmSHAP.llm import OpenAIInterface
 from llmSHAP.attribution_methods import ShapleyAttribution
 
 data = "In what city is the Eiffel Tower?"
-handler = DataHandler(data, permanent_key_names={0,3,4})
+handler = DataHandler(data, permanent_keys={0,3,4})
 prompt_handler = BasicPromptHandler(system="Answer the question briefly.")
 llm = OpenAIInterface("gpt-4o-mini")
 
@@ -65,12 +65,12 @@ data = {"a": "The", "b": "quick", "c": "brown", "d": "fox"}
 handler = DataHandler(data)
 ```
 
-To exclude certain keys from the computations, use `permanent_key_names`:
+To exclude certain keys from the computations, use `permanent_keys`:
 ```python
 from llmSHAP import DataHandler
 
 data = {"a": "The", "b": "quick", "c": "brown", "d": "fox"}
-handler = DataHandler(data, permanent_key_names={"a", "d"})
+handler = DataHandler(data, permanent_keys={"a", "d"})
 
 # Get data with index 1 WITHOUT the permanent features.
 print(handler.get_data({1}, exclude_permanent_keys=True, mask=False))
