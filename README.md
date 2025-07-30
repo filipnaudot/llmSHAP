@@ -8,7 +8,8 @@
 # llmSHAP
 ![Unit Tests](https://github.com/filipnaudot/llmSHAP/actions/workflows/test.yml/badge.svg)
 
-Lightweight interpretability framework using Shapley values for LLM-based outputs.
+
+Lightweight explainability framework using Shapley values for LLM-based outputs.
 
 ---
 
