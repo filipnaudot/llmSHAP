@@ -2,7 +2,7 @@ from llmSHAP.types import ResultMapping
 from llmSHAP.llm.llm_interface import LLMInterface
 
 from llmSHAP.data_handler import DataHandler
-from llmSHAP.prompt_handler import PromptHandler
+from llmSHAP.prompt_codec import PromptCodec
 from llmSHAP.generation import Generation
 from llmSHAP.similarity_functions import EmbeddingCosineSimilarity
 
@@ -12,12 +12,12 @@ class AttributionFunction:
     def __init__(self,
                  model: LLMInterface,
                  data_handler: DataHandler,
-                 prompt_handler: PromptHandler,
+                 prompt_codec: PromptCodec,
                  use_cache: bool = False,
                  verbose: bool = True):
         self.model = model
         self.data_handler = data_handler
-        self.prompt_handler = prompt_handler
+        self.prompt_codec = prompt_codec
         self.use_cache = use_cache
         self.verbose = verbose
         ####
@@ -38,9 +38,9 @@ class AttributionFunction:
         if self.use_cache and frozen_coalition in self.cache:
             return self.cache[frozen_coalition]
         
-        prompt = self.prompt_handler.build_prompt(self.data_handler, coalition)
+        prompt = self.prompt_codec.build_prompt(self.data_handler, coalition)
         generation = self.model.generate(prompt, max_tokens=max_tokens)
-        parsed_generation: Generation = self.prompt_handler.parse_generation(generation)
+        parsed_generation: Generation = self.prompt_codec.parse_generation(generation)
         
         if self.use_cache:
             self.cache[frozen_coalition] = parsed_generation

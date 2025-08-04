@@ -1,7 +1,7 @@
 import time
 from tqdm.auto import tqdm
 
-from llmSHAP.prompt_handler import PromptHandler
+from llmSHAP.prompt_codec import PromptCodec
 from llmSHAP.llm.llm_interface import LLMInterface
 from llmSHAP.attribution_methods.attribution_function import AttributionFunction
 from llmSHAP.attribution_methods.coalition_sampler import CoalitionSampler, FullEnumerationSampler
@@ -14,7 +14,7 @@ class ShapleyAttribution(AttributionFunction):
         self,
         model: LLMInterface,
         data_handler: DataHandler,
-        prompt_handler: PromptHandler,
+        prompt_codec: PromptCodec,
         sampler: CoalitionSampler | None = None,
         use_cache: bool = False,
         verbose: bool = True,
@@ -22,7 +22,7 @@ class ShapleyAttribution(AttributionFunction):
         super().__init__(
             model,
             data_handler=data_handler,
-            prompt_handler=prompt_handler,
+            prompt_codec=prompt_codec,
             use_cache=use_cache,
             verbose=verbose,
         )

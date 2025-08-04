@@ -7,17 +7,19 @@ from llmSHAP.generation import Generation
 
 
 
-class PromptHandler(ABC):
+class PromptCodec(ABC):
     @abstractmethod
     def build_prompt(self, data_handler: DataHandler, indexes: IndexSelection) -> Prompt:
-        pass
+        """(Encode) Build prompt to send to the model."""
+        raise NotImplementedError
 
     @abstractmethod
     def parse_generation(self, model_output: str) -> Generation:
-        pass
+        """(Decode) Parse model generation into a structured result."""
+        raise NotImplementedError
 
 
-class BasicPromptHandler(PromptHandler):
+class BasicPromptCodec(PromptCodec):
     def __init__(self, system: str = ""):
         self.system: str = system
     
