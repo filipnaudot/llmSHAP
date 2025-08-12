@@ -27,7 +27,7 @@ jobs:
       - name: Install doc deps and project (for autodoc)
         run: |
           python -m pip install --upgrade pip
-          pip install .[dev]  # brings in sphinx, myst-parser, furo, etc.
+          pip install .[dev]
 
       - name: Build Sphinx HTML
         run: sphinx-build -b html docs docs/build/html
