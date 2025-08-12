@@ -7,7 +7,7 @@
 
 # llmSHAP
 ![Unit Tests](https://github.com/filipnaudot/llmSHAP/actions/workflows/test.yml/badge.svg)
-
+[![Documentation](https://img.shields.io/badge/docs-online-blue.svg)](https://filipnaudot.github.io/llmSHAP/)
 
 Lightweight explainability framework using Shapley values for LLM-based outputs.
 
@@ -23,6 +23,11 @@ pip install -e .[dev]  # for bash
 ```bash
 pip install -e '.[dev]'  # for zsh
 ```
+
+Documentation is available at [llmSHAP Docs](https://filipnaudot.github.io/llmSHAP/) and a hands-on tutorial can be found [here](https://filipnaudot.github.io/llmSHAP/tutorial.html).
+
+- [Full documentation](https://filipnaudot.github.io/llmSHAP/)  
+- [Tutorial](https://filipnaudot.github.io/llmSHAP/tutorial.html)
 
 ---
 
