@@ -7,7 +7,7 @@ A quick, practical guide to using ``llmSHAP.DataHandler`` for chunk-level attrib
 
 
 Why it matters (chunk-level control)
-------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Unlike token-only approaches (e.g., word-level masking), ``DataHandler`` lets you choose your *feature granularity*: 
 words, sentences, paragraphs, or any fields you define. Pass a string for word-like tokens, or a mapping for sentence/section chunks.
@@ -15,7 +15,7 @@ This enables meaningful ablations (e.g., remove one sentence while keeping the r
 
 
 1) Create a DataHandler from strings and dicts
-----------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 String input (auto-splits on spaces into tokens)::
 
@@ -39,7 +39,7 @@ Dict input (you control the chunks and their order)::
 
 
 2) Inspect features (indexes and keys)
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To retrieve the data, there are two main functions: ``get_data`` and ``get_keys``.
 
@@ -88,7 +88,7 @@ Retrieve the index → key mapping using ``get_feature_enumeration``.
 
 
 3) Permanent keys (always-included context)
--------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. important::
    permanent_keys must match the actual keys in the internal mapping.
@@ -98,7 +98,7 @@ Retrieve the index → key mapping using ``get_feature_enumeration``.
    If you passed a string, keys are token indexes (0..N-1), so use integers (e.g. {0, 3}).
 
 Dict input → use dict keys
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""
 ``permanent_keys`` pins features that must always be present (e.g., instructions, the actual question). 
 They are **auto-included** unless you explicitly exclude them::
 
@@ -120,7 +120,7 @@ They are **auto-included** unless you explicitly exclude them::
 
 
 String input → use token indexes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""""""""
 
 ::
 
@@ -138,7 +138,7 @@ When to use permanent keys:
 
 
 4) Perturb the data (mask vs remove) and build strings
-------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Select specific indexes (e.g., 1, 2, 3) and get a *masked* view (default ``mask_token`` is ``""``)::
 
@@ -183,7 +183,7 @@ Destructive removal (updates the handler and re-enumerates indexes)::
 
 
 5) Minimal end-to-end example
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Combine everything into a small workflow::
 
@@ -217,7 +217,7 @@ Combine everything into a small workflow::
 
 
 Cheat sheet
------------
+^^^^^^^^^^^^
 
 - ``DataHandler(string)`` → word/token features
 - ``DataHandler(dict)`` → chunk features you define (sentences/sections/fields)
