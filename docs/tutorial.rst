@@ -216,8 +216,8 @@ Combine everything into a small workflow::
    # Exclude permanent: {'s1': 'Paris is the capital of France.', 's3': 'It was completed in 1889.'}
 
 
-Cheat sheet
-^^^^^^^^^^^^
+DataHandler cheat sheet
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 - ``DataHandler(string)`` → word/token features
 - ``DataHandler(dict)`` → chunk features you define (sentences/sections/fields)
