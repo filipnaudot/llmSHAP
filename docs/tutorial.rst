@@ -1,5 +1,117 @@
-Tutorial
+Tutorials
 ================================
+
+
+
+
+
+Getting started
+------------------------------------
+First, install ``llmSHAP`` in editable mode with development dependencies:
+
+.. tab-set::
+
+   .. tab-item:: bash
+
+      .. code-block:: bash
+
+         pip install -e .[dev]
+
+   .. tab-item:: zsh
+
+      .. code-block:: bash
+
+         pip install -e '.[dev]'
+
+
+
+Next, create a ``.env`` file in the root directory to store your API keys:
+
+.. code-block:: python
+
+   # Used for the OpenAIInterface.
+   OPENAI_API_KEY = <your_api_key_here>
+
+
+
+
+
+llmSHAP - Usage
+------------------------------------
+There are 4 main component to the library: ``DataHandler``, ``PromptCodec``, ``LLMInterface``, and ``AttributionFunction``.
+
+- ``DataHandler``: handles the data. We this class we can easily get subsets of the data and convert the desired data into a format that is sutable for a large language model (LLM).
+- ``PromptCodec``: turns a data selection into a prompt and parses the model's reply.
+- ``LLMInterface``: the model backend (OpenAI, local, etc.).
+- ``AttributionFunction``: computes the attribution scores for each chunk.
+
+Let's now walk through a small example. We'll use a string (token-level features) and keep a few uninteresting tokens permanently included.
+
+We start by importing the relevant classes:
+
+.. code-block:: python
+
+   from llmSHAP import DataHandler, BasicPromptCodec
+   from llmSHAP.llm import OpenAIInterface
+   from llmSHAP.attribution_methods import ShapleyAttribution
+
+We can now create the data, which is a simple string, and instantiate our data handler. 
+We select the indices of the tokens/words "In", "is", and "the" as permanent keys, since these tokens would 
+increase computation time while likely providing little useful insight.
+
+.. code-block:: python
+
+   data = "In what city is the Eiffel Tower?"
+   handler = DataHandler(data, permanent_keys={0,3,4})
+
+The ``DataHandler`` will split this string on spaces and create a Python dict with the word indices as keys.
+
+We need a ``PromptCodec`` to interact with the LLM and for this example with will use the ``llmSHAP.BasicPromptCodec`` promp codec.
+
+
+.. code-block:: python
+
+   prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
+
+Finally, we create the LLM interface, which will allow us to interact with an LLM (local or API-based).
+
+.. code-block:: python
+
+   llm = OpenAIInterface("gpt-4o-mini")
+
+We are now ready to compute the attribution score for each token in the string (except for "In", "is", and "the" since they are **permanent**).
+
+.. code-block:: python
+   
+   shap = ShapleyAttribution(model=llm, data_handler=handler, prompt_codec=prompt_codec, use_cache=True)
+   attribution, output = shap.attribution()
+
+The full code should now look like this:
+
+.. code-block:: python
+
+   from llmSHAP import DataHandler, BasicPromptCodec
+   from llmSHAP.llm import OpenAIInterface
+   from llmSHAP.attribution_methods import ShapleyAttribution
+
+   data = "In what city is the Eiffel Tower?"
+   handler = DataHandler(data, permanent_keys={0,3,4})
+   prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
+   llm = OpenAIInterface("gpt-4o-mini")
+
+   shap = ShapleyAttribution(model=llm, data_handler=handler, prompt_codec=prompt_codec, use_cache=True)
+   attribution, output = shap.attribution()
+
+   # We can now print the results.
+   print("\n\n### OUPUT ###")
+   print(output) # The LLM's answer to the question.
+
+   print("\n\n### ATTRIBUTION ###")
+   print(attribution) # The attribution score mapping.
+
+
+
+
 
 DataHandler
 ------------------------------------
@@ -48,9 +160,9 @@ To retrieve the data, there are two main functions: ``get_data`` and ``get_keys`
    from llmSHAP import DataHandler
 
    data = {
-   "s1": "Paris is the capital of France.",
-   "s2": "The Eiffel Tower is in Paris.",
-   "s3": "It was completed in 1889."
+      "s1": "Paris is the capital of France.",
+      "s2": "The Eiffel Tower is in Paris.",
+      "s3": "It was completed in 1889."
    }
 
    dh = DataHandler(data, permanent_keys={"s1"})
@@ -102,6 +214,8 @@ Dict input → use dict keys
 ``permanent_keys`` pins features that must always be present (e.g., instructions, the actual question). 
 They are **auto-included** unless you explicitly exclude them::
 
+   from llmSHAP import DataHandler
+
    data = {
       "(0) instruction": "Answer briefly.",
       "(1) question": "In what city is the Eiffel Tower?",
@@ -112,11 +226,11 @@ They are **auto-included** unless you explicitly exclude them::
 
    # When requesting a subset, permanent ones stay:
    print(dh.get_data(2, mask=False))
-   # -> includes instruction and question automatically
+   # Result: {'(0) instruction': 'Answer briefly.', '(1) question': 'In what city is the Eiffel Tower?', '(2) hint': 'Think about landmarks in France.'}
 
    # Only the variable chunk (no pinned context):
    print(dh.get_data(2, mask=False, exclude_permanent_keys=True))
-   # -> just {"(2) hint": "..."}
+   # Result: {'(2) hint': 'Think about landmarks in France.'}
 
 
 String input → use token indexes
@@ -145,9 +259,9 @@ Select specific indexes (e.g., 1, 2, 3) and get a *masked* view (default ``mask_
    from llmSHAP import DataHandler
    
    data = {
-   "s1": "Paris is the capital of France.",
-   "s2": "The Eiffel Tower is in Paris.",
-   "s3": "It was completed in 1889."
+      "s1": "Paris is the capital of France.",
+      "s2": "The Eiffel Tower is in Paris.",
+      "s3": "It was completed in 1889."
    }
    dh = DataHandler(data)
 
@@ -190,10 +304,10 @@ Combine everything into a small workflow::
    from llmSHAP import DataHandler
 
    data = {
-   "system": "Answer concisely.",
-   "s1": "Paris is the capital of France.",
-   "s2": "The Eiffel Tower is in Paris.",
-   "s3": "It was completed in 1889."
+      "system": "Answer concisely.",
+      "s1": "Paris is the capital of France.",
+      "s2": "The Eiffel Tower is in Paris.",
+      "s3": "It was completed in 1889."
    }
    dh = DataHandler(data, permanent_keys={"system"})
 

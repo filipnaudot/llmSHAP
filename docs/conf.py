@@ -1,11 +1,12 @@
 project = "llmSHAP"
 author = "Filip Naudot"
 extensions = [
-    "myst_parser",           # Allow Markdown (for README).
-    "sphinx.ext.autodoc",    # Pull docstrings from code.
-    "sphinx.ext.napoleon",   # Google/NumPy style docstrings.
-    "sphinx.ext.viewcode",   # Link to highlighted source.
-    "sphinx.ext.autosummary" # Optional summaries.
+    "myst_parser",            # Allow Markdown (for README).
+    "sphinx.ext.autodoc",     # Pull docstrings from code.
+    "sphinx.ext.napoleon",    # Google/NumPy style docstrings.
+    "sphinx.ext.viewcode",    # Link to highlighted source.
+    "sphinx.ext.autosummary", # Optional summaries.
+    "sphinx_design",          # Allow for nicer documentation. 
 ]
 
 # Treat README.md as Markdown via MyST.

@@ -26,6 +26,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "sphinx", "myst-parser", "sphinx-book-theme"]
+dev = ["pytest", "sphinx", "myst-parser", "sphinx-book-theme", "sphinx-design"]
 notebook = ["ipywidgets"]
 local = ["bitsandbytes", "accelerate", "protobuf", "sentencepiece"]
