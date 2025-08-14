@@ -38,12 +38,12 @@ Next, create a ``.env`` file in the root directory to store your API keys:
 
 llmSHAP - Usage
 ------------------------------------
-There are 4 main component to the library: ``DataHandler``, ``PromptCodec``, ``LLMInterface``, and ``AttributionFunction``.
+There are 4 main components to the library: ``DataHandler``, ``PromptCodec``, ``LLMInterface``, and ``AttributionFunction``.
 
-- ``DataHandler``: handles the data. We this class we can easily get subsets of the data and convert the desired data into a format that is sutable for a large language model (LLM).
-- ``PromptCodec``: turns a data selection into a prompt and parses the model's reply.
-- ``LLMInterface``: the model backend (OpenAI, local, etc.).
-- ``AttributionFunction``: computes the attribution scores for each chunk.
+- ``DataHandler``: Handles the data. This class we can get subsets of the data and convert the desired data into a format that is sutable for a large language model (LLM).
+- ``PromptCodec``: Turns a data selection into a prompt and parses the model's reply.
+- ``LLMInterface``: The model backend (OpenAI, Mistral, local, etc.).
+- ``AttributionFunction``: Computes the attribution scores for each chunk.
 
 Let's now walk through a small example. We'll use a string (token-level features) and keep a few uninteresting tokens permanently included.
 
@@ -168,17 +168,21 @@ To retrieve the data, there are two main functions: ``get_data`` and ``get_keys`
    all_keys = dh.get_keys() # Returns the enumerated keys
    print(all_keys) # Result: [0, 1, 2]
 
-   non_perm_keys = dh.get_keys(exclude_permanent_keys=True) # Returns the non-permanent enumerated keys
+   # Returns the non-permanent enumerated keys
+   non_perm_keys = dh.get_keys(exclude_permanent_keys=True)
    print(non_perm_keys) # Result: [1, 2]
 
-   all_data = dh.get_data(dh.get_keys()) # Returns the all data
+   # Returns all the data
+   all_data = dh.get_data(dh.get_keys())
    print(all_data)
    # Result: {'s1': 'Paris is the capital of France.', 's2': 'The Eiffel Tower is in Paris.', 's3': 'It was completed in 1889.'}
 
-   data = dh.get_data({1}) # Returns the data at the specified indices
+   # Returns the data at the specified indices
+   data = dh.get_data({1})
    print(data)
    # Result: {'s1': 'Paris is the capital of France.', 's2': 'The Eiffel Tower is in Paris.', 's3': ''}
 
+   # s1 is permanent and {1,2} are the indices of s2 and s3
    data_no_mask = dh.get_data({1,2}, mask=False)
    print(data_no_mask)
    # Result: {'s1': 'Paris is the capital of France.', 's2': 'The Eiffel Tower is in Paris.', 's3': 'It was completed in 1889.'}
@@ -242,11 +246,11 @@ String input → use token indexes
 
 When to use permanent keys:
 
-- Keep system/instruction text constant while perturbing evidence chunks
+- Keep system/instruction text constant while perturbing evidence chunks.
 
-- Keep the question fixed while Shapley samples supporting sentences
+- Keep the question fixed while Shapley samples supporting sentences.
 
-- Ensure formatting/scaffolding remains valid across perturbations
+- Ensure formatting/scaffolding remains valid across perturbations.
 
 
 4) Perturb the data (mask vs remove) and build strings
