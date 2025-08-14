@@ -1,4 +1,4 @@
-llmSHAP Documentation
+Documentation
 =====================
 
 .. toctree::
