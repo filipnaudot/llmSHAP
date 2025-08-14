@@ -34,9 +34,8 @@ Documentation is available at [llmSHAP Docs](https://filipnaudot.github.io/llmSH
 ## Example usage
 
 ```python
-from llmSHAP import DataHandler, BasicPromptCodec
+from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
 from llmSHAP.llm import OpenAIInterface
-from llmSHAP.attribution_methods import ShapleyAttribution
 
 data = "In what city is the Eiffel Tower?"
 handler = DataHandler(data, permanent_keys={0,3,4})

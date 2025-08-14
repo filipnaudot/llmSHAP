@@ -51,9 +51,8 @@ We start by importing the relevant classes:
 
 .. code-block:: python
 
-   from llmSHAP import DataHandler, BasicPromptCodec
+   from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
    from llmSHAP.llm import OpenAIInterface
-   from llmSHAP.attribution_methods import ShapleyAttribution
 
 We can now create the data, which is a simple string, and instantiate our data handler. 
 We select the indices of the tokens/words "In", "is", and "the" as permanent keys, since these tokens would 
@@ -90,9 +89,8 @@ The full code should now look like this:
 
 .. code-block:: python
 
-   from llmSHAP import DataHandler, BasicPromptCodec
+   from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
    from llmSHAP.llm import OpenAIInterface
-   from llmSHAP.attribution_methods import ShapleyAttribution
 
    data = "In what city is the Eiffel Tower?"
    handler = DataHandler(data, permanent_keys={0,3,4})
