@@ -40,7 +40,7 @@ llmSHAP - Usage
 ------------------------------------
 There are 4 main components to the library: ``DataHandler``, ``PromptCodec``, ``LLMInterface``, and ``AttributionFunction``.
 
-- ``DataHandler``: Handles the data. This class we can get subsets of the data and convert the desired data into a format that is sutable for a large language model (LLM).
+- ``DataHandler``: Handles the data. This class can get subsets of the data and convert the desired data into a format that is suitable for a large language model (LLM).
 - ``PromptCodec``: Turns a data selection into a prompt and parses the model's reply.
 - ``LLMInterface``: The model backend (OpenAI, Mistral, local, etc.).
 - ``AttributionFunction``: Computes the attribution scores for each chunk.
