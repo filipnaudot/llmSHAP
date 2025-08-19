@@ -65,7 +65,7 @@ increase computation time while likely providing little useful insight.
 
 The ``DataHandler`` will split this string on spaces and create a Python dict with the word indices as keys.
 
-We need a ``PromptCodec`` to interact with the LLM and for this example with will use the ``llmSHAP.BasicPromptCodec`` promp codec.
+We need a ``PromptCodec`` to interact with the LLM and for this example we will use the ``llmSHAP.BasicPromptCodec`` prompt codec.
 
 
 .. code-block:: python
@@ -101,7 +101,7 @@ The full code should now look like this:
    result = shap.attribution()
 
    # We can now print the results.
-   print("\n\n### OUPUT ###")
+   print("\n\n### OUTPUT ###")
    print(result.output) # The LLM's answer to the question.
 
    print("\n\n### ATTRIBUTION ###")
