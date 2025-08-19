@@ -83,7 +83,7 @@ We are now ready to compute the attribution score for each token in the string (
 .. code-block:: python
    
    shap = ShapleyAttribution(model=llm, data_handler=handler, prompt_codec=prompt_codec, use_cache=True)
-   attribution, output = shap.attribution()
+   result = shap.attribution()
 
 The full code should now look like this:
 
@@ -98,14 +98,14 @@ The full code should now look like this:
    llm = OpenAIInterface("gpt-4o-mini")
 
    shap = ShapleyAttribution(model=llm, data_handler=handler, prompt_codec=prompt_codec, use_cache=True)
-   attribution, output = shap.attribution()
+   result = shap.attribution()
 
    # We can now print the results.
    print("\n\n### OUPUT ###")
-   print(output) # The LLM's answer to the question.
+   print(result.output) # The LLM's answer to the question.
 
    print("\n\n### ATTRIBUTION ###")
-   print(attribution) # The attribution score mapping.
+   print(result.attribution) # The attribution score mapping.
 
 
 

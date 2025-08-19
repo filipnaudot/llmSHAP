@@ -7,6 +7,7 @@ from llmSHAP.attribution_methods.attribution_function import AttributionFunction
 from llmSHAP.attribution_methods.coalition_sampler import CoalitionSampler, FullEnumerationSampler
 from llmSHAP.data_handler import DataHandler
 from llmSHAP.generation import Generation
+from llmSHAP.attribution import Attribution
 
 
 class ShapleyAttribution(AttributionFunction):
@@ -49,4 +50,4 @@ class ShapleyAttribution(AttributionFunction):
 
         stop = time.perf_counter()
         if self.verbose: print(f"Time ({self.num_players} features): {(stop - start):.2f} seconds.")
-        return self._normalized_result(), base_generation.output
+        return Attribution(self._normalized_result(), base_generation.output)

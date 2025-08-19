@@ -43,13 +43,13 @@ prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
 llm = OpenAIInterface("gpt-4o-mini")
 
 shap = ShapleyAttribution(model=llm, data_handler=handler, prompt_codec=prompt_codec, use_cache=True)
-attribution, output = shap.attribution()
+result = shap.attribution()
 
 print("\n\n### OUPUT ###")
-print(output)
+print(result.output)
 
 print("\n\n### ATTRIBUTION ###")
-print(attribution)
+print(result.attribution)
 ```
 
 ---
