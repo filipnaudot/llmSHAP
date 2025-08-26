@@ -1,3 +1,6 @@
+import os, json
+from dataclasses import asdict
+
 from llmSHAP.types import ResultMapping
 from llmSHAP.llm.llm_interface import LLMInterface
 
@@ -14,12 +17,16 @@ class AttributionFunction:
                  data_handler: DataHandler,
                  prompt_codec: PromptCodec,
                  use_cache: bool = False,
-                 verbose: bool = True):
+                 verbose: bool = True,
+                 logging:bool = False,
+                 log_filename:str = "log",):
         self.model = model
         self.data_handler = data_handler
         self.prompt_codec = prompt_codec
         self.use_cache = use_cache
         self.verbose = verbose
+        self.logging = logging
+        self.log_filename = log_filename
         ####
         self.cache = {}
         self.result: ResultMapping = {}
@@ -44,8 +51,24 @@ class AttributionFunction:
         
         if self.use_cache:
             self.cache[frozen_coalition] = parsed_generation
+
+        if self.logging:
+            self._log(prompt, parsed_generation)
         
         return parsed_generation
+
+    def _log(self, prompt, parsed_generation):
+        os.makedirs("logs", exist_ok=True)
+        log_data = {
+                "prompt": prompt,
+                "generation": asdict(parsed_generation)
+            }
+
+        log_path = os.path.join("logs", f"{self.log_filename}.jsonl")
+
+        with open(log_path, "a", encoding="utf-8") as f:
+            json.dump(log_data, f, indent=4, ensure_ascii=False)
+            f.write("\n")
 
     def _add_feature_score(self, feature, score) -> None:
         for key, value in self.data_handler.get_data(feature, mask=False, exclude_permanent_keys=True).items():

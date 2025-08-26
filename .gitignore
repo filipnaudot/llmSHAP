@@ -2,6 +2,9 @@ test.py
 playground.py
 .DS_Store
 
+# Logs
+/logs
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

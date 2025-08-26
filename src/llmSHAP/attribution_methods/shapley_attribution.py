@@ -19,6 +19,7 @@ class ShapleyAttribution(AttributionFunction):
         sampler: CoalitionSampler | None = None,
         use_cache: bool = False,
         verbose: bool = True,
+        logging:bool = False,
     ):
         super().__init__(
             model,
@@ -26,6 +27,7 @@ class ShapleyAttribution(AttributionFunction):
             prompt_codec=prompt_codec,
             use_cache=use_cache,
             verbose=verbose,
+            logging=logging,
         )
         self.num_players = len(self.data_handler.get_keys(exclude_permanent_keys=True))
         self.sampler = sampler or FullEnumerationSampler(self.num_players)
