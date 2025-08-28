@@ -46,7 +46,7 @@ class ShapleyAttribution(AttributionFunction):
                 for coalition_set, weight in self.sampler(feature, variable_keys):
                     generation_without = self._get_output(coalition_set)
                     generation_with = self._get_output(coalition_set | {feature})
-                    shapley_value += weight * (self._v(base_generation, generation_with) - self._v(base_generation, generation_without))
+                    shapley_value += weight * abs(self._v(base_generation, generation_with) - self._v(base_generation, generation_without))
 
                 self._add_feature_score(feature, shapley_value)
 
