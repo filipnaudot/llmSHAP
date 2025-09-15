@@ -22,6 +22,7 @@ class ShapleyAttribution(AttributionFunction):
         use_cache: bool = False,
         verbose: bool = True,
         logging:bool = False,
+        num_threads: int = 1,
     ):
         super().__init__(
             model,
@@ -31,6 +32,7 @@ class ShapleyAttribution(AttributionFunction):
             verbose=verbose,
             logging=logging,
         )
+        self.num_threads = num_threads
         self.num_players = len(self.data_handler.get_keys(exclude_permanent_keys=True))
         self.sampler = sampler or FullEnumerationSampler(self.num_players)
 
@@ -53,7 +55,7 @@ class ShapleyAttribution(AttributionFunction):
 
                 shapley_value = 0.0
                 tasks = []
-                with ThreadPoolExecutor(max_workers=10) as executor:
+                with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
                     for coalition_set, weight in self.sampler(feature, variable_keys):
                         tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_generation))
 
