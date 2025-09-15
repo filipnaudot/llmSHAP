@@ -30,10 +30,10 @@ class TFIDFCosineSimilarity(SimilarityFunction):
 # Embedding-Based Similarity Funciton.
 #########################################################
 from sentence_transformers import SentenceTransformer, util
-from llmSHAP.types import Optional
+from llmSHAP.types import ClassVar
 
 class EmbeddingCosineSimilarity(SimilarityFunction):
-    _model: Optional[SentenceTransformer] = None
+    _model: ClassVar[SentenceTransformer | None] = None
 
     def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
         if EmbeddingCosineSimilarity._model is None:
@@ -41,5 +41,6 @@ class EmbeddingCosineSimilarity(SimilarityFunction):
 
     def __call__(self, string1: str, string2: str) -> float:
         if not string1.strip() or not string2.strip(): return 0.0
+        assert self._model is not None
         embeddings = self._model.encode([string1, string2], convert_to_tensor=True)
         return float(util.cos_sim(embeddings[0], embeddings[1]))
