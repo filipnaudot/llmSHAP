@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from functools import lru_cache
 
+from llmSHAP.types import ClassVar
 
 
 class SimilarityFunction(ABC):
@@ -17,11 +18,17 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 
 class TFIDFCosineSimilarity(SimilarityFunction):
-    _vectorizer = TfidfVectorizer()
+    _vectorizer: ClassVar[TfidfVectorizer | None] = None
+
+    def __init__(self):
+        if TFIDFCosineSimilarity._vectorizer is None:
+            print(f"Initializing TfidfVectorizer...")
+            TFIDFCosineSimilarity._vectorizer = TfidfVectorizer()
 
     @lru_cache(maxsize=2_000)
     def __call__(self, string1: str, string2: str) -> float:
         if not string1.strip() or not string2.strip(): return 0.0
+        assert self._vectorizer is not None
         vectors = self._vectorizer.fit_transform([string1, string2])
         return float(cosine_similarity(vectors)[0, 1])
 
@@ -30,13 +37,13 @@ class TFIDFCosineSimilarity(SimilarityFunction):
 # Embedding-Based Similarity Funciton.
 #########################################################
 from sentence_transformers import SentenceTransformer, util
-from llmSHAP.types import ClassVar
 
 class EmbeddingCosineSimilarity(SimilarityFunction):
     _model: ClassVar[SentenceTransformer | None] = None
 
     def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
         if EmbeddingCosineSimilarity._model is None:
+            print(f"Loading sentence transformer model {model_name}...")
             EmbeddingCosineSimilarity._model = SentenceTransformer(model_name)
 
     def __call__(self, string1: str, string2: str) -> float:
