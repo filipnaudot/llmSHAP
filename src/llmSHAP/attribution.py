@@ -28,5 +28,5 @@ class Attribution:
     def render(self) -> str:
         RESET="\033[0m"
         FG="\033[38;5;0m"
-        BG=lambda s:(lambda s: f"\033[48;5;{196+7*round((1-s)*5)}m" if s>=0 else f"\033[48;5;{16+42*round((1+s)*5)+5}m")(max(-1,min(1,s)))
+        BG=lambda s:(lambda s: f"\033[48;5;{196+7*round((1-s)*4)}m" if s>=0 else f"\033[48;5;{16+42*round((1+s)*4)+5}m")(max(-1,min(1,s)))
         return " ".join(f"{BG(d.get('score',0))}{FG} {d.get('value','')} {RESET}" for d in self._attribution.values())
