@@ -39,9 +39,10 @@ class ShapleyAttribution(AttributionFunction):
 
 
     def _compute_marginal_contribution(self, coalition_set: set[Index], feature, weight, base_generation):
+        if not coalition_set: return 0
         generation_without = self._get_output(coalition_set)
         generation_with = self._get_output(coalition_set | {feature})
-        return weight * abs(self._v(base_generation, generation_with) - self._v(base_generation, generation_without))
+        return weight * (self._v(base_generation, generation_with) - self._v(base_generation, generation_without))
 
 
     def attribution(self):
@@ -59,7 +60,7 @@ class ShapleyAttribution(AttributionFunction):
                     for coalition_set, weight in self.sampler(feature, variable_keys):
                         tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_generation))
 
-                for future in as_completed(tasks): shapley_value += future.result()
+                for marginal_contribution in as_completed(tasks): shapley_value += marginal_contribution.result()
 
                 self._add_feature_score(feature, shapley_value)
 

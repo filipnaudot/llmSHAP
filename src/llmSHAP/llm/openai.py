@@ -25,20 +25,16 @@ class OpenAIInterface(LLMInterface):
                  seed:int = 42) -> str:
         response = self.client.chat.completions.create(
                 model=self.model_name,
-                messages=prompt,
+                messages=prompt, # type: ignore[arg-type]
                 max_tokens=max_tokens,
                 temperature=temperature,
                 seed=seed
             )
-        return response.choices[0].message.content
+        return response.choices[0].message.content or ""
 
     def is_local(self): return False
 
     def name(self): return self.model_name
 
     def cleanup(self):
-        del self.client
-        self.client = None
-        del self.model_name
-        self.model_name = None
         gc.collect()
