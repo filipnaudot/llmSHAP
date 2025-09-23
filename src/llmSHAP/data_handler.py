@@ -9,7 +9,7 @@ class DataHandler:
     def __init__(
         self,
         data: DataMapping | str,
-        permanent_keys: Set[str] | None = None,
+        permanent_keys: Set[str] | Set[Index] | None = None,
         mask_token: str = "",
     ) -> None:
         self.mask_token: str = mask_token
@@ -20,7 +20,7 @@ class DataHandler:
         self.data: DataMapping = dict(data) # Store a *shallow* copy
         self.key_enum: Dict[Index, str] = {index: key for index, key in enumerate(self.data.keys())}
 
-        self.permanent_keys: Set[str] = permanent_keys or set()
+        self.permanent_keys = permanent_keys or set()
         self.permanent_indexes: Set[Index] = {
             index for index, key in self.key_enum.items() if key in self.permanent_keys
         }

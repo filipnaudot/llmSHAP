@@ -1,5 +1,7 @@
 import time
 from tqdm.auto import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from math import fsum
 
 from llmSHAP.prompt_codec import PromptCodec
 from llmSHAP.llm.llm_interface import LLMInterface
@@ -8,6 +10,7 @@ from llmSHAP.attribution_methods.coalition_sampler import CoalitionSampler, Full
 from llmSHAP.data_handler import DataHandler
 from llmSHAP.generation import Generation
 from llmSHAP.attribution import Attribution
+from llmSHAP.types import Index
 
 
 class ShapleyAttribution(AttributionFunction):
@@ -20,6 +23,7 @@ class ShapleyAttribution(AttributionFunction):
         use_cache: bool = False,
         verbose: bool = True,
         logging:bool = False,
+        num_threads: int = 1,
     ):
         super().__init__(
             model,
@@ -29,8 +33,17 @@ class ShapleyAttribution(AttributionFunction):
             verbose=verbose,
             logging=logging,
         )
+        self.num_threads = num_threads
         self.num_players = len(self.data_handler.get_keys(exclude_permanent_keys=True))
         self.sampler = sampler or FullEnumerationSampler(self.num_players)
+
+
+
+    def _compute_marginal_contribution(self, coalition_set: set[Index], feature: Index, weight:float, base_generation: Generation):
+        if not coalition_set: return 0
+        generation_without = self._get_output(coalition_set)
+        generation_with = self._get_output(coalition_set | {feature})
+        return weight * (self._v(base_generation, generation_with) - self._v(base_generation, generation_without))
 
 
     def attribution(self):
@@ -43,10 +56,14 @@ class ShapleyAttribution(AttributionFunction):
                 if feature in self.data_handler.permanent_indexes: self._add_feature_score(feature, 0); continue
 
                 shapley_value = 0.0
-                for coalition_set, weight in self.sampler(feature, variable_keys):
-                    generation_without = self._get_output(coalition_set)
-                    generation_with = self._get_output(coalition_set | {feature})
-                    shapley_value += weight * abs(self._v(base_generation, generation_with) - self._v(base_generation, generation_without))
+                tasks = []
+                with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
+                    for coalition_set, weight in self.sampler(feature, variable_keys):
+                        tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_generation))
+
+                contribs = [future.result() for future in as_completed(tasks)]
+                shapley_value = fsum(contribs)
+
 
                 self._add_feature_score(feature, shapley_value)
 

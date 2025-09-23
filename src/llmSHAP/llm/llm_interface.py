@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 
+from llmSHAP.types import Prompt
 
 class LLMInterface(ABC):
     @abstractmethod
-    def generate(self, prompt, max_tokens: int) -> str:
+    def generate(self, prompt: Prompt, max_tokens: int) -> str:
         pass
     
     @abstractmethod

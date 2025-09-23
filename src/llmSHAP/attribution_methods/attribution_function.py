@@ -1,5 +1,6 @@
 import os, json
 from dataclasses import asdict
+import threading
 
 from llmSHAP.types import ResultMapping
 from llmSHAP.llm.llm_interface import LLMInterface
@@ -29,6 +30,7 @@ class AttributionFunction:
         self.log_filename = log_filename
         ####
         self.cache = {}
+        self._cache_lock = threading.Lock()
         self.result: ResultMapping = {}
         self.similarity_function = EmbeddingCosineSimilarity()
 
@@ -42,15 +44,18 @@ class AttributionFunction:
     
     def _get_output(self, coalition, max_tokens: int = 512) -> Generation:
         frozen_coalition = frozenset(coalition)
-        if self.use_cache and frozen_coalition in self.cache:
-            return self.cache[frozen_coalition]
+        if self.use_cache:
+            with self._cache_lock:
+                if frozen_coalition in self.cache:
+                    return self.cache[frozen_coalition]
         
         prompt = self.prompt_codec.build_prompt(self.data_handler, coalition)
         generation = self.model.generate(prompt, max_tokens=max_tokens)
         parsed_generation: Generation = self.prompt_codec.parse_generation(generation)
         
         if self.use_cache:
-            self.cache[frozen_coalition] = parsed_generation
+            with self._cache_lock:
+                self.cache[frozen_coalition] = parsed_generation
 
         if self.logging:
             self._log(prompt, parsed_generation)
