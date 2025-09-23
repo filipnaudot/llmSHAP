@@ -40,7 +40,6 @@ class ShapleyAttribution(AttributionFunction):
 
 
     def _compute_marginal_contribution(self, coalition_set: set[Index], feature: Index, weight:float, base_generation: Generation):
-        if not coalition_set: return 0
         generation_without = self._get_output(coalition_set)
         generation_with = self._get_output(coalition_set | {feature})
         return weight * (self._v(base_generation, generation_with) - self._v(base_generation, generation_without))
