@@ -11,6 +11,21 @@
 
 Lightweight explainability framework using Shapley values for LLM-based outputs.
 
+
+| Capability                                                                | **llmSHAP**                                                 | **TokenSHAP**                  |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------ |
+| Threaded                                                                  | ✅ (optional ``num_threads``)                                | ❌                              |
+| Modular architecture                                                      | ✅                                                           | ❌                              |
+| Exact Shapley option                                                      | ✅ (Full enumeration)                                        | ❌ (Monte Carlo sampling)       |
+| Generation caching across coalitions                                      | ✅                                                           | ❌                              |
+| Heuristics                                                                | SlidingWindow • Monte Carlo • Counterfactual                 | Monte Carlo                    |
+| Sentences-/chunk-level attribution                                        | ✅                                                           | ❌ (token-only for text)        |
+| Permanent context pinning (always-included features)                      | ✅                                                           | ❌                              |
+| Pluggable similarity metric                                               | ✅ TF-IDF, embeddings                                        | ✅ TF-IDF, embeddings          |
+| Docs & tutorial                                                           | ✅ Sphinx docs + tutorial                                    | ✅ README only                 |
+| Unit tests & CI                                                           | ✅ Pytest + GitHub Actions                                   | ❌                              |
+| Vision object attribution                                                 | —                                                            | ✅ PixelSHAP                   |
+
 ---
 
 ## Getting started
