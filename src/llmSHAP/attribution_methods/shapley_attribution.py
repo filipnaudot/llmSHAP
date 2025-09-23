@@ -48,6 +48,8 @@ class ShapleyAttribution(AttributionFunction):
     def attribution(self):
         start = time.perf_counter()
         base_generation: Generation = self._get_output(self.data_handler.get_keys())
+        baseline_value = self._v(base_generation, self._get_output(set()))
+
         variable_keys = self.data_handler.get_keys(exclude_permanent_keys=True)
 
         with tqdm(self.data_handler.get_keys(), desc="Features", position=0, leave=False, disable=not self.verbose,) as feature_bar:
@@ -68,4 +70,5 @@ class ShapleyAttribution(AttributionFunction):
 
         stop = time.perf_counter()
         if self.verbose: print(f"Time ({self.num_players} features): {(stop - start):.2f} seconds.")
-        return Attribution(self.result, base_generation.output)
+        
+        return Attribution(self.result, base_generation.output, baseline_value)

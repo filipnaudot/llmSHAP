@@ -1,10 +1,10 @@
-from llmSHAP.types import Any
+from llmSHAP.types import ResultMapping
 
 
 class Attribution:
     """Represents an attribution result and its associated output."""
 
-    def __init__(self, attribution: Any, output: Any) -> None:
+    def __init__(self, attribution: ResultMapping, output: str, baseline: float) -> None:
         """
         Initialize an Attribution instance.
 
@@ -14,16 +14,22 @@ class Attribution:
         """
         self._attribution = attribution
         self._output = output
+        self._baseline = baseline
 
     @property
-    def attribution(self) -> Any:
+    def attribution(self) -> ResultMapping:
         """Return the attribution result."""
         return self._attribution
 
     @property
-    def output(self) -> Any:
+    def output(self) -> str:
         """Return the output data."""
         return self._output
+    
+    @property
+    def baseline(self) -> float:
+        """Return the output data."""
+        return self._baseline
 
     def render(self) -> str:
         RESET="\033[0m"

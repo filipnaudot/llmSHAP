@@ -1,5 +1,3 @@
-# test_threads_attribution.py
-
 from llmSHAP.attribution_methods.shapley_attribution import ShapleyAttribution
 from llmSHAP.llm.llm_interface import LLMInterface
 from llmSHAP.generation import Generation
