@@ -96,7 +96,7 @@ print(handler.get_data({1}, exclude_permanent_keys=False, mask=False))
 | Exact Shapley option                                                      | ✅ (Full enumeration)                                        | ❌ (Monte Carlo sampling)       |
 | Generation caching across coalitions                                      | ✅                                                           | ❌                              |
 | Heuristics                                                                | SlidingWindow • Monte Carlo • Counterfactual                 | Monte Carlo                    |
-| Sentences-/chunk-level attribution                                        | ✅                                                           | ❌ (token-only for text)        |
+| Sentence-/chunk-level attribution                                        | ✅                                                           | ❌ (token-only for text)        |
 | Permanent context pinning (always-included features)                      | ✅                                                           | ❌                              |
 | Pluggable similarity metric                                               | ✅ TF-IDF, embeddings                                        | ✅ TF-IDF, embeddings          |
 | Docs & tutorial                                                           | ✅ Sphinx docs + tutorial                                    | ✅ README only                 |
