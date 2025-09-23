@@ -68,4 +68,4 @@ class ShapleyAttribution(AttributionFunction):
 
         stop = time.perf_counter()
         if self.verbose: print(f"Time ({self.num_players} features): {(stop - start):.2f} seconds.")
-        return Attribution(self._normalized_result(), base_generation.output)
+        return Attribution(self.result, base_generation.output)
