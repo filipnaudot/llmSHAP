@@ -1,6 +1,7 @@
 import time
 from tqdm.auto import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from math import fsum
 
 from llmSHAP.prompt_codec import PromptCodec
 from llmSHAP.llm.llm_interface import LLMInterface
@@ -60,7 +61,9 @@ class ShapleyAttribution(AttributionFunction):
                     for coalition_set, weight in self.sampler(feature, variable_keys):
                         tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_generation))
 
-                for marginal_contribution in as_completed(tasks): shapley_value += marginal_contribution.result()
+                contribs = [future.result() for future in as_completed(tasks)]
+                shapley_value = fsum(contribs)
+
 
                 self._add_feature_score(feature, shapley_value)
 
