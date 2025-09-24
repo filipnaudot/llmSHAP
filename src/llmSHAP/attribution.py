@@ -4,7 +4,10 @@ from llmSHAP.types import ResultMapping
 class Attribution:
     """Represents an attribution result and its associated output."""
 
-    def __init__(self, attribution: ResultMapping, output: str, baseline: float) -> None:
+    def __init__(self, attribution: ResultMapping,
+                 output: str,
+                 baseline: float,
+                 grand_coalition_value: float) -> None:
         """
         Initialize an Attribution instance.
 
@@ -14,7 +17,8 @@ class Attribution:
         """
         self._attribution = attribution
         self._output = output
-        self._baseline = baseline
+        self._empty_baseline = baseline
+        self._grand_coalition_value = grand_coalition_value
 
     @property
     def attribution(self) -> ResultMapping:
@@ -27,9 +31,14 @@ class Attribution:
         return self._output
     
     @property
-    def baseline(self) -> float:
-        """Return the output data."""
-        return self._baseline
+    def empty_baseline(self) -> float:
+        """Return the empty baseline value (the no player pay-off)."""
+        return self._empty_baseline
+    
+    @property
+    def grand_coalition_value(self) -> float:
+        """Return the value of the grand coalition."""
+        return self._grand_coalition_value
 
     def render(self) -> str:
         RESET="\033[0m"
