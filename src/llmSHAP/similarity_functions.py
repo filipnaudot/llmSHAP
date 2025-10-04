@@ -46,6 +46,7 @@ class EmbeddingCosineSimilarity(SimilarityFunction):
             print(f"Loading sentence transformer model {model_name}...")
             EmbeddingCosineSimilarity._model = SentenceTransformer(model_name)
 
+    @lru_cache(maxsize=2_000)
     def __call__(self, string1: str, string2: str) -> float:
         if not string1.strip() or not string2.strip(): return 0.0
         assert self._model is not None
