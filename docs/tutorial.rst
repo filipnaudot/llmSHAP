@@ -110,6 +110,54 @@ The full code should now look like this:
 
 
 
+Threads
+------------------------------------
+``llmSHAP`` also supports multi-threading, via the ``num_threads`` parameter in ``ShapleyAttribution``. 
+This assumes that the LLM inference backend can 
+handle multiple concurrent inference requests, since the parallelization happens at the 
+inference call level. 
+
+The example below runs Shapley attribution on a 7-feature input string with 
+1-10 threads and measures the runtime.
+
+.. code-block:: python
+
+   import time
+   import matplotlib.pyplot as plt
+   from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
+   from llmSHAP.llm import OpenAIInterface
+
+   data = "In what city is the Eiffel Tower?"
+   handler = DataHandler(data, permanent_keys=None)
+   prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
+   llm = OpenAIInterface("gpt-4o-mini")
+
+   times = []
+   threads = list(range(1, 11))
+   for num_threads in threads:
+      shap = ShapleyAttribution(model=llm,
+                                 data_handler=handler,
+                                 prompt_codec=prompt_codec,
+                                 use_cache=True,
+                                 num_threads=num_threads)
+      start = time.time()
+      _ = shap.attribution()
+      times.append(time.time() - start)
+
+   plt.plot(threads, times, marker="o")
+   plt.xlabel("Number of Threads")
+   plt.ylabel("Time (seconds)")
+   plt.title("Shapley Attribution Runtime vs Threads")
+   plt.grid(True)
+   plt.show()
+
+.. image:: ./llmSHAP_thread_analysis.png
+   :alt: Runtime vs Threads
+   :align: center
+   :width: 80%
+
+
+
 
 DataHandler
 ------------------------------------

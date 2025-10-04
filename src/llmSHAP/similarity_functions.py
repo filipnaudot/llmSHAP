@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from functools import lru_cache
 
-from llmSHAP.types import ClassVar
+from llmSHAP.types import ClassVar, Optional
 
 
 class SimilarityFunction(ABC):
@@ -39,7 +39,7 @@ class TFIDFCosineSimilarity(SimilarityFunction):
 from sentence_transformers import SentenceTransformer, util
 
 class EmbeddingCosineSimilarity(SimilarityFunction):
-    _model: ClassVar[SentenceTransformer | None] = None
+    _model: ClassVar[Optional[SentenceTransformer]] = None
 
     def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
         if EmbeddingCosineSimilarity._model is None:
