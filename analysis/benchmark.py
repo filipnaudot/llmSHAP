@@ -3,7 +3,7 @@ import csv
 
 from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
 from llmSHAP.llm import OpenAIInterface
-
+from llmSHAP.attribution_methods import CounterfactualSampler, SlidingWindowSampler, FullEnumerationSampler
 
 
 def _load_data(file_name):
@@ -41,6 +41,9 @@ if __name__ == "__main__":
     
     for entry in data:
         handler = _build_data_handler(entry)
+        # TODO: init all samplers
+
+        # TODO: for each sampler, run attribution
         shap = ShapleyAttribution(model=llm,
                                 data_handler=handler,
                                 prompt_codec=prompt_codec,
@@ -48,6 +51,13 @@ if __name__ == "__main__":
                                 num_threads=7)
         result = shap.attribution()
 
+        # TODO: store attribution
+
+
+        # TODO: compare CounterfactualSampler and 
+        # SlidingWindowSampler attributions to FullEnumerationSampler attribution
+
+        
         print("\n\n### OUTPUT ###")
         print(result.output)
 
