@@ -35,35 +35,50 @@ def _build_data_handler(data):
 
 
 if __name__ == "__main__":
+    VERBOSE = False
+
     prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
     llm = OpenAIInterface("gpt-4o-mini")
     data = _load_data("symptom_dataset.csv")
     
-    for entry in data:
+    attribution_results = {
+        "CounterfactualSampler": [],
+        "SlidingWindowSampler": [],
+        "FullEnumerationSamplerCache": [],
+        "FullEnumerationSampler": [],
+    }
+    for i, entry in enumerate(data):
         handler = _build_data_handler(entry)
-        # TODO: init all samplers
-
-        # TODO: for each sampler, run attribution
-        shap = ShapleyAttribution(model=llm,
-                                data_handler=handler,
-                                prompt_codec=prompt_codec,
-                                use_cache=True,
-                                num_threads=7)
-        result = shap.attribution()
-
-        # TODO: store attribution
-
-
-        # TODO: compare CounterfactualSampler and 
-        # SlidingWindowSampler attributions to FullEnumerationSampler attribution
-
         
-        print("\n\n### OUTPUT ###")
-        print(result.output)
+        # Init all samplers
+        players = handler.get_keys()
+        samplers = [
+            # name                          sampler                                  use_cache
+            ("CounterfactualSampler",       CounterfactualSampler(),                 False),
+            ("SlidingWindowSampler",        SlidingWindowSampler(players, w_size=3), False),
+            ("FullEnumerationSamplerCache", FullEnumerationSampler(len(players)),    True),
+            ("FullEnumerationSampler",      FullEnumerationSampler(len(players)),    False)
+        ]
 
-        print("\n\n### ATTRIBUTION ###")
-        print(result.attribution)
+        # For each sampler, run attribution
+        for name, sampler, cache in samplers:
+            shap = ShapleyAttribution(model=llm,
+                                    data_handler=handler,
+                                    prompt_codec=prompt_codec,
+                                    sampler=sampler,
+                                    use_cache=cache,
+                                    num_threads=7)
+            result = shap.attribution()
+            if VERBOSE:
+                print("\n\n### OUTPUT ###")
+                print(result.output)
+                print("\n\n### ATTRIBUTION ###")
+                print(result.attribution)
 
-        print("\n\n### HEATMAP ###")
-        print(result.render())
-    
+            # Store attribution
+            attribution_results[name].append(result.attribution)
+
+
+    print(attribution_results)
+    # TODO: compare CounterfactualSampler and 
+    # SlidingWindowSampler attributions to FullEnumerationSampler attribution
