@@ -2,6 +2,7 @@
 import csv
 import math
 from statistics import mean
+import matplotlib.pyplot as plt
 
 from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
 from llmSHAP.llm import OpenAIInterface
@@ -80,6 +81,18 @@ def _compare_attributions_to_gold(attribution_data, gold_function_name="FullEnum
     return similarity_results_by_function
 
 
+def _plot_similarities(similarities):
+    names = list(similarities.keys())
+    means = [value["mean_similarity"] for value in similarities.values()]
+    plt.bar(names, means)
+    plt.ylabel("Mean Similarity")
+    plt.title("Attribution Similarity to standard Shapley value")
+    plt.xticks(rotation=30, ha="right")
+    plt.tight_layout()
+    plt.savefig("./similarities_chart.png")
+    plt.close()
+
+
 if __name__ == "__main__":
     VERBOSE = False
 
@@ -103,7 +116,7 @@ if __name__ == "__main__":
             ("CounterfactualSampler",       CounterfactualSampler(),                 False),
             ("SlidingWindowSampler",        SlidingWindowSampler(players, w_size=3), False),
             ("FullEnumerationSamplerCache", FullEnumerationSampler(len(players)),    True),
-            ("FullEnumerationSampler",      FullEnumerationSampler(len(players)),    False)
+            ("FullEnumerationSampler",      FullEnumerationSampler(len(players)),    False) # Gold standard
         ]
 
         # For each sampler, run attribution
@@ -124,7 +137,10 @@ if __name__ == "__main__":
             # Store attribution
             attribution_results[name].append(result.attribution)
 
-        if i == 2: break
+        similarities = _compare_attributions_to_gold(attribution_results)
+        _plot_similarities(similarities)
+
+        if i == 1: break
     
     similarities = _compare_attributions_to_gold(attribution_results)
     print(similarities)
