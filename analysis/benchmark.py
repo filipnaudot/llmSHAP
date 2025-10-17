@@ -3,6 +3,7 @@ import csv
 import math
 from statistics import mean
 import matplotlib.pyplot as plt
+import time
 
 from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
 from llmSHAP.llm import OpenAIInterface
@@ -35,7 +36,7 @@ def _build_data_handler(data):
 
 
 
-def _compare_attributions_to_gold(attribution_data, gold_function_name="FullEnumerationSampler"):
+def _compare_attributions_to_gold(attribution_data, gold_function_name="Shapley value"):
     gold_attributions = attribution_data[gold_function_name]
     number_of_datapoints = len(gold_attributions)
 
@@ -93,6 +94,25 @@ def _plot_similarities(similarities):
     plt.close()
 
 
+def _plot_timing(timing_results):
+    for name, results in timing_results.items():
+        grouped = {}
+        for result in results:
+            grouped.setdefault(result["num_features"], []).append(result["time"])
+        num_features_list = sorted(grouped.keys())
+        time_result_list = [mean(grouped[x]) for x in num_features_list]
+        plt.plot(num_features_list, time_result_list, marker='o', label=name)
+    plt.xlabel("Number of Features")
+    plt.ylabel("Average Time (s)")
+    plt.title("Attribution Runtime by Number of Features")
+    plt.legend()
+    plt.xticks(sorted(num_features_list))
+    plt.tight_layout()
+    plt.savefig("./timing_chart.png")
+    plt.close()
+
+
+
 if __name__ == "__main__":
     VERBOSE = False
 
@@ -100,23 +120,30 @@ if __name__ == "__main__":
     llm = OpenAIInterface("gpt-4o-mini")
     data = _load_data("symptom_dataset.csv")
     
+
+    timing_results = {
+        "Counterfactual": [],
+        "Sliding window": [],
+        "Shapley value - Cache": [],
+        "Shapley value": [],
+    }
     attribution_results = {
-        "CounterfactualSampler": [],
-        "SlidingWindowSampler": [],
-        "FullEnumerationSamplerCache": [],
-        "FullEnumerationSampler": [],
+        "Counterfactual": [],
+        "Sliding window": [],
+        "Shapley value - Cache": [],
+        "Shapley value": [],
     }
     for i, entry in enumerate(data):
         handler = _build_data_handler(entry)
         
         # Init all samplers
-        players = handler.get_keys()
+        players = handler.get_keys(exclude_permanent_keys=True)
         samplers = [
             # name                          sampler                                  use_cache
-            ("CounterfactualSampler",       CounterfactualSampler(),                 False),
-            ("SlidingWindowSampler",        SlidingWindowSampler(players, w_size=3), False),
-            ("FullEnumerationSamplerCache", FullEnumerationSampler(len(players)),    True),
-            ("FullEnumerationSampler",      FullEnumerationSampler(len(players)),    False) # Gold standard
+            ("Counterfactual",              CounterfactualSampler(),                 False),
+            ("Sliding window",              SlidingWindowSampler(players, w_size=3), False),
+            ("Shapley value - Cache",       FullEnumerationSampler(len(players)),    True),
+            ("Shapley value",               FullEnumerationSampler(len(players)),    False) # Gold standard
         ]
 
         # For each sampler, run attribution
@@ -127,20 +154,26 @@ if __name__ == "__main__":
                                     sampler=sampler,
                                     use_cache=cache,
                                     num_threads=7)
+            
+            start_time = time.perf_counter() # Start clock
             result = shap.attribution()
+            elapsed = time.perf_counter() - start_time # Stop clock
+
             if VERBOSE:
                 print("\n\n### OUTPUT ###")
                 print(result.output)
                 print("\n\n### ATTRIBUTION ###")
                 print(result.attribution)
 
-            # Store attribution
             attribution_results[name].append(result.attribution)
+            timing_results[name].append({
+                "num_features": len(players),
+                "time": elapsed
+            })
+
 
         similarities = _compare_attributions_to_gold(attribution_results)
         _plot_similarities(similarities)
+        _plot_timing(timing_results)
 
-        if i == 1: break
-    
-    similarities = _compare_attributions_to_gold(attribution_results)
-    print(similarities)
+        if i == 1: break # TEMP: break after 2 data points
