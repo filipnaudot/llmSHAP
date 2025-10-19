@@ -112,24 +112,58 @@ def _plot_timing(timing_results):
     plt.close()
 
 
+def _plot_similarity_convergence(similarities):
+    for method_name, method_stats in similarities.items():
+        per_datapoint_similarities = method_stats["per_datapoint"]
+        if not per_datapoint_similarities: continue
+
+        running_mean_values = []
+        cumulative_similarity_sum = 0.0
+        for number_of_points, current_similarity_value in enumerate(per_datapoint_similarities, start=1):
+            cumulative_similarity_sum += current_similarity_value
+            running_mean_values.append(cumulative_similarity_sum / number_of_points)
+
+        # The "final" target is the running mean after all datapoints
+        final_mean_similarity = running_mean_values[-1]
+        absolute_differences_to_final = [
+            abs(running_mean - final_mean_similarity) for running_mean in running_mean_values
+        ]
+
+        plt.plot(
+            range(1, len(absolute_differences_to_final) + 1),
+            absolute_differences_to_final,
+            marker="o",
+            label=method_name,
+        )
+
+    plt.xlabel("Number of Data Points")
+    plt.ylabel("Running mean and Final mean Diff")
+    plt.title("Similarity Convergence to Gold Standard")
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig("./similarity_convergence.png")
+    plt.close()
+
+
+
 
 if __name__ == "__main__":
     VERBOSE = False
 
     prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
     llm = OpenAIInterface("gpt-4o-mini")
-    data = _load_data("symptom_dataset.csv")
+    data = _load_data("reduced_symptom_dataset.csv")
     
 
     timing_results = {
         "Counterfactual": [],
-        "Sliding window": [],
+        "Sliding window (w=3)": [],
         "Shapley value - Cache": [],
         "Shapley value": [],
     }
     attribution_results = {
         "Counterfactual": [],
-        "Sliding window": [],
+        "Sliding window (w=3)": [],
         "Shapley value - Cache": [],
         "Shapley value": [],
     }
@@ -141,7 +175,7 @@ if __name__ == "__main__":
         samplers = [
             # name                          sampler                                  use_cache
             ("Counterfactual",              CounterfactualSampler(),                 False),
-            ("Sliding window",              SlidingWindowSampler(players, w_size=3), False),
+            ("Sliding window (w=3)",        SlidingWindowSampler(players, w_size=3), False),
             ("Shapley value - Cache",       FullEnumerationSampler(len(players)),    True),
             ("Shapley value",               FullEnumerationSampler(len(players)),    False) # Gold standard
         ]
@@ -175,5 +209,6 @@ if __name__ == "__main__":
         similarities = _compare_attributions_to_gold(attribution_results)
         _plot_similarities(similarities)
         _plot_timing(timing_results)
+        _plot_similarity_convergence(similarities)
 
-        if i == 1: break # TEMP: break after 2 data points
+        if i == 5: break # TEMP
