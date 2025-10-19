@@ -89,6 +89,7 @@ def _plot_similarities(similarities):
     plt.ylabel("Mean Similarity")
     plt.title("Attribution Similarity to standard Shapley value")
     plt.xticks(rotation=30, ha="right")
+    for i, v in enumerate(means): plt.text(i, v, f"{v:.2f}", ha="center", va="bottom", fontsize=9)
     plt.tight_layout()
     plt.savefig("./similarities_chart.png")
     plt.close()
