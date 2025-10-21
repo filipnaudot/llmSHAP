@@ -4,6 +4,7 @@ import math
 from statistics import mean
 import matplotlib.pyplot as plt
 import time
+import json
 
 from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
 from llmSHAP.llm import OpenAIInterface
@@ -146,6 +147,16 @@ def _plot_similarity_convergence(similarities):
     plt.close()
 
 
+def _log(i, attribution_results, similarities, timing_results):
+    entry = {
+        "data_index": i,
+        "attribution_results": attribution_results,
+        "similarities": similarities,
+        "timing": timing_results,
+    }
+    with open("run_log.jsonl", "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, default=str) + "\n")
+
 
 
 if __name__ == "__main__":
@@ -211,5 +222,6 @@ if __name__ == "__main__":
         _plot_similarities(similarities)
         _plot_timing(timing_results)
         _plot_similarity_convergence(similarities)
+        _log(i, attribution_results, similarities, timing_results)
 
-        if i == 5: break # TEMP
+        # if i == 2: break # TEMP
