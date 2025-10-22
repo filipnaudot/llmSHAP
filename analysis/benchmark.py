@@ -128,7 +128,7 @@ def _plot_similarity_convergence(similarities):
         # The "final" target is the running mean after all datapoints
         final_mean_similarity = running_mean_values[-1]
         absolute_differences_to_final = [
-            abs(running_mean - final_mean_similarity) for running_mean in running_mean_values
+            abs(running_mean - final_mean_similarity) for running_mean in running_mean_values[:-1]
         ]
 
         plt.plot(
@@ -147,15 +147,20 @@ def _plot_similarity_convergence(similarities):
     plt.close()
 
 
-def _log(i, attribution_results, similarities, timing_results):
+def _log(i, similarities, timing_results, attribution_results=None):
     entry = {
         "data_index": i,
-        "attribution_results": attribution_results,
         "similarities": similarities,
         "timing": timing_results,
     }
-    with open("run_log.jsonl", "a", encoding="utf-8") as f:
+    with open("log.jsonl", "w", encoding="utf-8") as f:
         f.write(json.dumps(entry, default=str) + "\n")
+    if attribution_results:
+        attribution_results_entry = {
+            "attribution_results": attribution_results,
+        }
+        with open("full_attribution_log.jsonl", "w", encoding="utf-8") as f:
+            f.write(json.dumps(attribution_results_entry, default=str) + "\n")
 
 
 
@@ -163,7 +168,7 @@ if __name__ == "__main__":
     VERBOSE = False
 
     prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
-    llm = OpenAIInterface("gpt-4o-mini")
+    llm = OpenAIInterface("gpt-4.1-mini")
     data = _load_data("reduced_symptom_dataset.csv")
     
 
@@ -199,7 +204,7 @@ if __name__ == "__main__":
                                     prompt_codec=prompt_codec,
                                     sampler=sampler,
                                     use_cache=cache,
-                                    num_threads=7)
+                                    num_threads=3)
             
             start_time = time.perf_counter() # Start clock
             result = shap.attribution()
@@ -222,6 +227,6 @@ if __name__ == "__main__":
         _plot_similarities(similarities)
         _plot_timing(timing_results)
         _plot_similarity_convergence(similarities)
-        _log(i, attribution_results, similarities, timing_results)
+        _log(i, similarities, timing_results)
 
         # if i == 2: break # TEMP
