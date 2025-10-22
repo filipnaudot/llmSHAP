@@ -111,6 +111,11 @@ def _plot_timing(timing_results):
     plt.xticks(sorted(num_features_list))
     plt.tight_layout()
     plt.savefig("./timing_chart.png")
+
+    # Second plot: log-scaled y-axis
+    plt.yscale("log")
+    plt.title("Attribution Runtime by Number of Features (Log Scale)")
+    plt.savefig("./timing_chart_log.png")
     plt.close()
 
 
