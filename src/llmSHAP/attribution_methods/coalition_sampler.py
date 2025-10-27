@@ -44,7 +44,7 @@ class SlidingWindowSampler(CoalitionSampler):
         self.stride = stride
 
         self.windows: List[List[Index]] = []
-        for start in range(0, len(ordered_keys), stride):
+        for start in range(0, len(ordered_keys) - w_size + 1, stride):
             window = ordered_keys[start:start + w_size]
             if len(window) == 0: break
             self.windows.append(window)
