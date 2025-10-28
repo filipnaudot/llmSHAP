@@ -38,14 +38,13 @@ def _build_data_handler(data):
 
 
 def _compare_attributions_to_gold(attribution_data, gold_function_name="Shapley value"):
-    gold_attributions = attribution_data[gold_function_name]
-    number_of_datapoints = len(gold_attributions)
+    gold_entries = attribution_data[gold_function_name]
+    number_of_datapoints = len(gold_entries)
 
-
-    def extract_score_vector(attribution_entry, ordered_feature_keys):
+    def extract_score_vector(attribution_mapping, ordered_feature_keys):
         score_vector = []
         for feature_key in ordered_feature_keys:
-            feature_record = attribution_entry.get(feature_key, {})
+            feature_record = attribution_mapping.get(feature_key, {})
             if isinstance(feature_record, dict):
                 score_vector.append(float(feature_record.get("score", 0.0)))
             else:
@@ -61,39 +60,88 @@ def _compare_attributions_to_gold(attribution_data, gold_function_name="Shapley 
         magnitude_b = math.sqrt(sum(b * b for b in vector_b))
         return 0.0 if magnitude_a == 0.0 or magnitude_b == 0.0 else dot_product / (magnitude_a * magnitude_b)
 
-
-    key_orders = [list(gold_attributions[i].keys()) for i in range(number_of_datapoints)]
-    gold_vectors = [extract_score_vector(gold_attributions[i], key_orders[i]) for i in range(number_of_datapoints)]
+    ordered_feature_keys_per_datapoint = [
+        list(gold_entries[i]["attribution"].keys()) for i in range(number_of_datapoints)
+    ]
+    gold_score_vectors = [
+        extract_score_vector(gold_entries[i]["attribution"], ordered_feature_keys_per_datapoint[i])
+        for i in range(number_of_datapoints)
+    ]
+    feature_counts_per_datapoint = [gold_entries[i]["feature_count"] for i in range(number_of_datapoints)]
 
     similarity_results_by_function = {}
-    for function_name, function_attributions in attribution_data.items():
-        if function_name == gold_function_name: continue
-        
+    for method_name, method_entries in attribution_data.items():
+        if method_name == gold_function_name:
+            continue
+
         per_datapoint_similarities = []
-        for i in range(number_of_datapoints):
-            function_vector = extract_score_vector(function_attributions[i], key_orders[i])
-            similarity_value = cosine_similarity(gold_vectors[i], function_vector)
+        similarities_grouped_by_feature_count = {}  # {feature_count: [similarities]}
+
+        for datapoint_index in range(number_of_datapoints):
+            method_score_vector = extract_score_vector(
+                method_entries[datapoint_index]["attribution"],
+                ordered_feature_keys_per_datapoint[datapoint_index],
+            )
+            similarity_value = cosine_similarity(
+                gold_score_vectors[datapoint_index],
+                method_score_vector
+            )
             per_datapoint_similarities.append(similarity_value)
 
-        similarity_results_by_function[function_name] = {
+            feature_count = feature_counts_per_datapoint[datapoint_index]
+            similarities_grouped_by_feature_count.setdefault(feature_count, []).append(similarity_value)
+
+        average_similarity_by_feature_count = {
+            feature_count: mean(similarities)
+            for feature_count, similarities in similarities_grouped_by_feature_count.items()
+        }
+
+        similarity_results_by_function[method_name] = {
             "per_datapoint": per_datapoint_similarities,
             "mean_similarity": mean(per_datapoint_similarities) if per_datapoint_similarities else None,
+            "by_feature_count": average_similarity_by_feature_count,
         }
-        
+
     return similarity_results_by_function
 
 
+def _calculate_efficiency(attribution_result):
+    attribution_total = attribution_result.empty_baseline + sum([value["score"] for value in attribution_result.attribution.values()])
+    return (attribution_result.grand_coalition_value // attribution_total)*100
+    
+
 def _plot_similarities(similarities):
-    names = list(similarities.keys())
-    means = [value["mean_similarity"] for value in similarities.values()]
-    plt.bar(names, means)
+    # Bar plot
+    method_names = list(similarities.keys())
+    mean_similarities = [method_stats["mean_similarity"] for method_stats in similarities.values()]
+    plt.bar(method_names, mean_similarities)
     plt.ylabel("Mean Similarity")
     plt.title("Attribution Similarity to standard Shapley value")
     plt.xticks(rotation=30, ha="right")
-    for i, v in enumerate(means): plt.text(i, v, f"{v:.2f}", ha="center", va="bottom", fontsize=9)
+    for index, mean_value in enumerate(mean_similarities):
+        plt.text(index, mean_value, f"{mean_value:.2f}", ha="center", va="bottom", fontsize=9)
     plt.tight_layout()
     plt.savefig("./similarities_chart.png")
     plt.close()
+
+    # Line plot
+    any_series_plotted = False
+    for method_name, method_stats in similarities.items():
+        average_similarity_by_feature_count = method_stats.get("by_feature_count", {})
+        if not average_similarity_by_feature_count: continue
+        sorted_feature_counts = sorted(average_similarity_by_feature_count.keys())
+        averaged_similarities = [average_similarity_by_feature_count[feature_count] for feature_count in sorted_feature_counts]
+        plt.plot(sorted_feature_counts, averaged_similarities, marker="o", label=method_name)
+        any_series_plotted = True
+    if any_series_plotted:
+        plt.xlabel("Number of Features")
+        plt.ylabel("Average Similarity")
+        plt.title("Average Similarity vs. Feature Count")
+        plt.legend()
+        plt.xticks(sorted_feature_counts)
+        plt.tight_layout()
+        plt.savefig("./similarities_by_feature_count.png")
+        plt.close()
 
 
 def _plot_timing(timing_results):
@@ -221,17 +269,17 @@ if __name__ == "__main__":
                 print("\n\n### ATTRIBUTION ###")
                 print(result.attribution)
 
-            attribution_results[name].append(result.attribution)
-            timing_results[name].append({
-                "num_features": len(players),
-                "time": elapsed
+            efficiency = _calculate_efficiency(result)
+            attribution_results[name].append({
+                "attribution": result.attribution,
+                "feature_count": len(players),
+                "efficiency": efficiency,
             })
+            timing_results[name].append({"num_features": len(players), "time": elapsed})
 
 
         similarities = _compare_attributions_to_gold(attribution_results)
         _plot_similarities(similarities)
-        _plot_timing(timing_results)
         _plot_similarity_convergence(similarities)
-        _log(i, similarities, timing_results)
-
-        # if i == 2: break # TEMP
+        _plot_timing(timing_results)
+        _log(i, similarities, timing_results, attribution_results=attribution_results)

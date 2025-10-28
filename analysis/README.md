@@ -1,6 +1,6 @@
-## 🩺 Symptom–Disease Dataset
+# 🩺 Symptom–Disease Dataset
 
-### Overview
+## Overview
 
 This dataset contains labeled disease cases with associated symptoms. Each row represents one patient record, listing symptoms across multiple columns (`Symptom_1`, `Symptom_2`, …) and the corresponding `Disease`.
 
@@ -18,3 +18,8 @@ This dataset contains labeled disease cases with associated symptoms. Each row r
 Duplicates were removed using exact row matching (`pandas.DataFrame.drop_duplicates()`), ensuring only one unique record per symptom combination and disease remains.
 
 ---
+## Analysis
+
+The following plot shows how quickly each method’s similarity to the *gold standard* stabilizes as more data points are used. The y-axis represents how far the running mean similarity at each step is from the final overall mean, so a curve that drops quickly toward zero indicates faster convergence. In short, flatter lines near the bottom mean the method’s similarity become reliable with fewer data points.
+
+![similarity convergence](similarity_convergence.png)
