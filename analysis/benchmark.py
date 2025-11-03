@@ -221,7 +221,7 @@ if __name__ == "__main__":
     VERBOSE = False
 
     prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
-    llm = OpenAIInterface("gpt-4.1-mini")
+    llm = OpenAIInterface("gpt-4.1-mini", temperature=0.2, max_tokens=64)
     data = _load_data("reduced_symptom_dataset.csv")
     
 
