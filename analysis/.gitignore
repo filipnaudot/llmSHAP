@@ -1,2 +1,3 @@
+*.png
 *.jsonl
 filter_dataset.py

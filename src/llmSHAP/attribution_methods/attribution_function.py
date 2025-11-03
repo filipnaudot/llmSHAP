@@ -42,7 +42,7 @@ class AttributionFunction:
         if total == 0: return self.result
         return {key: {"value": value["value"], "score": value["score"] / total} for key, value in self.result.items()}
     
-    def _get_output(self, coalition, max_tokens: int = 512) -> Generation:
+    def _get_output(self, coalition) -> Generation:
         frozen_coalition = frozenset(coalition)
         if self.use_cache:
             with self._cache_lock:
@@ -50,7 +50,7 @@ class AttributionFunction:
                     return self.cache[frozen_coalition]
         
         prompt = self.prompt_codec.build_prompt(self.data_handler, coalition)
-        generation = self.model.generate(prompt, max_tokens=max_tokens)
+        generation = self.model.generate(prompt)
         parsed_generation: Generation = self.prompt_codec.parse_generation(generation)
         
         if self.use_cache:

@@ -4,7 +4,7 @@ from llmSHAP.types import Prompt
 
 class LLMInterface(ABC):
     @abstractmethod
-    def generate(self, prompt: Prompt, max_tokens: int) -> str:
+    def generate(self, prompt: Prompt) -> str:
         pass
     
     @abstractmethod
