@@ -33,9 +33,11 @@ html_theme_options = {
     "repository_branch": "main",
     "path_to_docs": "docs",
 
-    "use_source_button": True,
     "use_repository_button": True,
+    "use_source_button": False,
     "use_edit_page_button": False,
+    "use_download_button": False,
+    "use_fullscreen_button": False,
 
     "logo": {
         "image_light": "./llmSHAP-logo-lightmode.png",
