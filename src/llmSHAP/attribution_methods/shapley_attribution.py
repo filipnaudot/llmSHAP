@@ -10,7 +10,8 @@ from llmSHAP.attribution_methods.coalition_sampler import CoalitionSampler, Full
 from llmSHAP.data_handler import DataHandler
 from llmSHAP.generation import Generation
 from llmSHAP.attribution import Attribution
-from llmSHAP.types import Index
+from llmSHAP.value_functions import ValueFunction
+from llmSHAP.types import Index, Optional
 
 
 class ShapleyAttribution(AttributionFunction):
@@ -22,8 +23,9 @@ class ShapleyAttribution(AttributionFunction):
         sampler: CoalitionSampler | None = None,
         use_cache: bool = False,
         verbose: bool = True,
-        logging:bool = False,
+        logging: bool = False,
         num_threads: int = 1,
+        similarity_function: Optional[ValueFunction] = None,
     ):
         super().__init__(
             model,
@@ -32,6 +34,7 @@ class ShapleyAttribution(AttributionFunction):
             use_cache=use_cache,
             verbose=verbose,
             logging=logging,
+            similarity_function=similarity_function,
         )
         self.num_threads = num_threads
         self.num_players = len(self.data_handler.get_keys(exclude_permanent_keys=True))

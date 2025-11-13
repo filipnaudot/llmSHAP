@@ -18,14 +18,12 @@ authors = [
 license = { text = "MIT" }
 
 dependencies = [
-  "python-dotenv",
-  "matplotlib",
   "scikit-learn",
-  "sentence-transformers",
-  "openai",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "sphinx", "myst-parser", "sphinx-book-theme", "sphinx-design"]
-notebook = ["ipywidgets"]
-local = ["bitsandbytes", "accelerate", "protobuf", "sentencepiece"]
+openai     = ["openai", "python-dotenv"]
+embeddings = ["sentence-transformers"]
+dev        = ["pytest", "matplotlib", "sphinx", "myst-parser", "sphinx-book-theme", "sphinx-design"]
+full       = ["llmSHAP[openai]", "llmSHAP[embeddings]", "llmSHAP[dev]"]
+notebook   = ["ipywidgets"]

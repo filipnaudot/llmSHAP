@@ -4,7 +4,7 @@ from functools import lru_cache
 from llmSHAP.types import ClassVar, Optional
 
 
-class SimilarityFunction(ABC):
+class ValueFunction(ABC):
     @abstractmethod
     def __call__(self, s1: str, s2: str) -> float:
         pass
@@ -17,7 +17,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-class TFIDFCosineSimilarity(SimilarityFunction):
+class TFIDFCosineSimilarity(ValueFunction):
     _vectorizer: ClassVar[TfidfVectorizer | None] = None
 
     def __init__(self):
@@ -38,7 +38,7 @@ class TFIDFCosineSimilarity(SimilarityFunction):
 #########################################################
 from sentence_transformers import SentenceTransformer, util
 
-class EmbeddingCosineSimilarity(SimilarityFunction):
+class EmbeddingCosineSimilarity(ValueFunction):
     _model: ClassVar[Optional[SentenceTransformer]] = None
 
     def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
