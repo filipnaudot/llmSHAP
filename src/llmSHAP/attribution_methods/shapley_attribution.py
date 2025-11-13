@@ -63,11 +63,15 @@ class ShapleyAttribution(AttributionFunction):
                 shapley_value = 0.0
                 tasks = []
                 with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
-                    for coalition_set, weight in self.sampler(feature, variable_keys):
-                        tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_generation))
+                    for coalition_set, weight in list(self.sampler(feature, variable_keys)):
+                        tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_generation,))
 
-                contribs = [future.result() for future in as_completed(tasks)]
-                shapley_value = fsum(contribs)
+                    with tqdm(total=len(tasks), desc=f"Coalitions", position=1, leave=False, disable=not self.verbose) as coalition_bar:
+                        contributions = []
+                        for future in as_completed(tasks):
+                            contributions.append(future.result())
+                            coalition_bar.update(1)
+                shapley_value = fsum(contributions)
 
 
                 self._add_feature_score(feature, shapley_value)
