@@ -51,22 +51,22 @@ class SlidingWindowSampler(CoalitionSampler):
 
         self.feature2wins: Dict[Index, List[int]] = {k: [] for k in ordered_keys}
         for index, window in enumerate(self.windows):
-            for k in window: self.feature2wins[k].append(index)
+            for key in window: self.feature2wins[key].append(index)
 
-        self._fact = {k: factorial(k) for k in range(w_size + 1)}
+        self._factorials = {key: factorial(key) for key in range(w_size + 1)}
 
-    def __call__(self, feature: Index, variable_keys: List[Index]):
+    def __call__(self, feature: Index, non_permanent_keys: List[Index]):
         window_ids = self.feature2wins.get(feature, [])
         if not window_ids: return
 
         avg_factor = 1.0 / len(window_ids)
         for win_id in window_ids:
             window = self.windows[win_id]
-            window_features = [k for k in window if k != feature]
-            outside = set(variable_keys) - set(window)
+            window_features = [key for key in window if key != feature]
+            outside = set(non_permanent_keys) - set(window)
 
             for coalition_size in range(len(window_features) + 1):
-                weight = (self._fact[coalition_size] * self._fact[len(window) - coalition_size - 1] / self._fact[len(window)]) * avg_factor
+                weight = (self._factorials[coalition_size] * self._factorials[len(window) - coalition_size - 1] / self._factorials[len(window)]) * avg_factor
                 for coalition in combinations(window_features, coalition_size):
                     final_set = set(coalition) | outside
                     yield final_set, weight

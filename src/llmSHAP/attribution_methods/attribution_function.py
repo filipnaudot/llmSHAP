@@ -2,13 +2,14 @@ import os, json
 from dataclasses import asdict
 import threading
 
-from llmSHAP.types import ResultMapping
+from llmSHAP.types import ResultMapping, Optional
+from llmSHAP.value_functions import ValueFunction
 from llmSHAP.llm.llm_interface import LLMInterface
 
 from llmSHAP.data_handler import DataHandler
 from llmSHAP.prompt_codec import PromptCodec
 from llmSHAP.generation import Generation
-from llmSHAP.similarity_functions import EmbeddingCosineSimilarity
+from llmSHAP.value_functions import TFIDFCosineSimilarity
 
 
 
@@ -19,8 +20,10 @@ class AttributionFunction:
                  prompt_codec: PromptCodec,
                  use_cache: bool = False,
                  verbose: bool = True,
-                 logging:bool = False,
-                 log_filename:str = "log",):
+                 logging: bool = False,
+                 log_filename: str = "log",
+                 similarity_function: Optional[ValueFunction] = None,
+                 ):
         self.model = model
         self.data_handler = data_handler
         self.prompt_codec = prompt_codec
@@ -28,11 +31,11 @@ class AttributionFunction:
         self.verbose = verbose
         self.logging = logging
         self.log_filename = log_filename
+        self.similarity_function = similarity_function or TFIDFCosineSimilarity()
         ####
         self.cache = {}
         self._cache_lock = threading.Lock()
         self.result: ResultMapping = {}
-        self.similarity_function = EmbeddingCosineSimilarity()
 
     def _v(self, base_output: Generation, new_output: Generation) -> float:
         return self.similarity_function(str(base_output.output), str(new_output.output))

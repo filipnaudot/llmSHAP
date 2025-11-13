@@ -10,7 +10,8 @@ from llmSHAP.attribution_methods.coalition_sampler import CoalitionSampler, Full
 from llmSHAP.data_handler import DataHandler
 from llmSHAP.generation import Generation
 from llmSHAP.attribution import Attribution
-from llmSHAP.types import Index
+from llmSHAP.value_functions import ValueFunction
+from llmSHAP.types import Index, Optional
 
 
 class ShapleyAttribution(AttributionFunction):
@@ -22,8 +23,9 @@ class ShapleyAttribution(AttributionFunction):
         sampler: CoalitionSampler | None = None,
         use_cache: bool = False,
         verbose: bool = True,
-        logging:bool = False,
+        logging: bool = False,
         num_threads: int = 1,
+        similarity_function: Optional[ValueFunction] = None,
     ):
         super().__init__(
             model,
@@ -32,6 +34,7 @@ class ShapleyAttribution(AttributionFunction):
             use_cache=use_cache,
             verbose=verbose,
             logging=logging,
+            similarity_function=similarity_function,
         )
         self.num_threads = num_threads
         self.num_players = len(self.data_handler.get_keys(exclude_permanent_keys=True))
@@ -50,8 +53,7 @@ class ShapleyAttribution(AttributionFunction):
         base_generation: Generation = self._get_output(self.data_handler.get_keys())
         grand_coalition_value = self._v(base_generation, base_generation)
         empty_baseline_value = self._v(base_generation, self._get_output(set()))
-
-        variable_keys = self.data_handler.get_keys(exclude_permanent_keys=True)
+        non_permanent_keys = self.data_handler.get_keys(exclude_permanent_keys=True)
 
         with tqdm(self.data_handler.get_keys(), desc="Features", position=0, leave=False, disable=not self.verbose,) as feature_bar:
             for feature in feature_bar:
@@ -60,11 +62,15 @@ class ShapleyAttribution(AttributionFunction):
                 shapley_value = 0.0
                 tasks = []
                 with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
-                    for coalition_set, weight in self.sampler(feature, variable_keys):
+                    for coalition_set, weight in list(self.sampler(feature, non_permanent_keys)):
                         tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_generation))
 
-                contribs = [future.result() for future in as_completed(tasks)]
-                shapley_value = fsum(contribs)
+                    with tqdm(total=len(tasks), desc=f"Coalitions", position=1, leave=False, disable=not self.verbose) as coalition_bar:
+                        contributions = []
+                        for future in as_completed(tasks):
+                            contributions.append(future.result())
+                            coalition_bar.update(1)
+                shapley_value = fsum(contributions)
 
 
                 self._add_feature_score(feature, shapley_value)
