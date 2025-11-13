@@ -53,8 +53,7 @@ class ShapleyAttribution(AttributionFunction):
         base_generation: Generation = self._get_output(self.data_handler.get_keys())
         grand_coalition_value = self._v(base_generation, base_generation)
         empty_baseline_value = self._v(base_generation, self._get_output(set()))
-
-        variable_keys = self.data_handler.get_keys(exclude_permanent_keys=True)
+        non_permanent_keys = self.data_handler.get_keys(exclude_permanent_keys=True)
 
         with tqdm(self.data_handler.get_keys(), desc="Features", position=0, leave=False, disable=not self.verbose,) as feature_bar:
             for feature in feature_bar:
@@ -63,8 +62,8 @@ class ShapleyAttribution(AttributionFunction):
                 shapley_value = 0.0
                 tasks = []
                 with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
-                    for coalition_set, weight in list(self.sampler(feature, variable_keys)):
-                        tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_generation,))
+                    for coalition_set, weight in list(self.sampler(feature, non_permanent_keys)):
+                        tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_generation))
 
                     with tqdm(total=len(tasks), desc=f"Coalitions", position=1, leave=False, disable=not self.verbose) as coalition_bar:
                         contributions = []
