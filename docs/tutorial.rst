@@ -15,13 +15,13 @@ First, install ``llmSHAP`` in editable mode with development dependencies:
 
       .. code-block:: bash
 
-         pip install -e .[dev]
+         pip install -e .[full]
 
    .. tab-item:: zsh
 
       .. code-block:: bash
 
-         pip install -e '.[dev]'
+         pip install -e '.[full]'
 
 
 
