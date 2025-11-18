@@ -1,10 +1,15 @@
 from abc import ABC, abstractmethod
 from functools import lru_cache
 
-from llmSHAP.types import ClassVar, Optional
+from llmSHAP.types import TYPE_CHECKING, ClassVar, Optional
+
+if TYPE_CHECKING:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sentence_transformers import SentenceTransformer
 
 
-class SimilarityFunction(ABC):
+
+class ValueFunction(ABC):
     @abstractmethod
     def __call__(self, s1: str, s2: str) -> float:
         pass
@@ -13,14 +18,22 @@ class SimilarityFunction(ABC):
 #########################################################
 # Basic TFIDF-based Cosine Similarity Funciton.
 #########################################################
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+try:
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    _HAS_SKLEARN = True
+except ImportError:
+    _HAS_SKLEARN = False
 
-
-class TFIDFCosineSimilarity(SimilarityFunction):
-    _vectorizer: ClassVar[TfidfVectorizer | None] = None
+class TFIDFCosineSimilarity(ValueFunction):
+    _vectorizer: ClassVar[Optional["TfidfVectorizer"]] = None
 
     def __init__(self):
+        if not _HAS_SKLEARN:
+            raise ImportError(
+                "TFIDFCosineSimilarity requires the 'scikit-learn'.\n"
+                "Install with: pip install scikit-learn"
+            ) from None
         if TFIDFCosineSimilarity._vectorizer is None:
             print(f"Initializing TfidfVectorizer...")
             TFIDFCosineSimilarity._vectorizer = TfidfVectorizer()
@@ -36,13 +49,22 @@ class TFIDFCosineSimilarity(SimilarityFunction):
 #########################################################
 # Embedding-Based Similarity Funciton.
 #########################################################
-from sentence_transformers import SentenceTransformer, util
+try:
+    from sentence_transformers import SentenceTransformer, util
+    _HAS_SENTENCE_TRANSFORMERS = True
+except ImportError:
+    _HAS_SENTENCE_TRANSFORMERS = False
 
-class EmbeddingCosineSimilarity(SimilarityFunction):
-    _model: ClassVar[Optional[SentenceTransformer]] = None
+class EmbeddingCosineSimilarity(ValueFunction):
+    _model: ClassVar[Optional["SentenceTransformer"]] = None
 
     def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
         if EmbeddingCosineSimilarity._model is None:
+            if not _HAS_SENTENCE_TRANSFORMERS:
+                raise ImportError(
+                    "EmbeddingCosineSimilarity requires the 'embeddings' extra.\n"
+                    "Install with: pip install llmSHAP[embeddings]"
+                ) from None
             print(f"Loading sentence transformer model {model_name}...")
             EmbeddingCosineSimilarity._model = SentenceTransformer(model_name)
 

@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import time
 import json
 
-from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
+from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution, EmbeddingCosineSimilarity
 from llmSHAP.llm import OpenAIInterface
 from llmSHAP.attribution_methods import CounterfactualSampler, SlidingWindowSampler, FullEnumerationSampler
 
@@ -257,7 +257,8 @@ if __name__ == "__main__":
                                     prompt_codec=prompt_codec,
                                     sampler=sampler,
                                     use_cache=cache,
-                                    num_threads=3)
+                                    num_threads=3,
+                                    similarity_function=EmbeddingCosineSimilarity())
             
             start_time = time.perf_counter() # Start clock
             result = shap.attribution()

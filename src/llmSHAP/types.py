@@ -1,4 +1,16 @@
-from typing import Dict, Set, Any, Iterable, Union, Optional, List, Tuple, ClassVar
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    Set,
+    Any,
+    Iterable,
+    Union,
+    Optional,
+    List,
+    Tuple,
+    ClassVar,
+    Callable,
+)
 
 
 # ------------------------------------------------------------------ #

@@ -16,15 +16,15 @@ Lightweight explainability framework using Shapley values for LLM-based outputs.
 ## Getting started
 Install (from GitHub) as a package:
 ```bash
-pip install git+https://github.com/filipnaudot/llmSHAP.git#egg=llmSHAP
+pip install "llmSHAP[full] @ git+https://github.com/filipnaudot/llmSHAP.git"
 ```
 
-Install in editable mode with test dependencies (after cloning the repository):
+Install in editable mode with all optional dependencies (after cloning the repository):
 ```bash
-pip install -e .[dev]  # for bash
+pip install -e .[full]  # for bash
 ```
 ```bash
-pip install -e '.[dev]'  # for zsh
+pip install -e '.[full]'  # for zsh
 ```
 
 Documentation is available at [llmSHAP Docs](https://filipnaudot.github.io/llmSHAP/) and a hands-on tutorial can be found [here](https://filipnaudot.github.io/llmSHAP/tutorial.html).
