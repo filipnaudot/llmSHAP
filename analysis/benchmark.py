@@ -258,7 +258,7 @@ if __name__ == "__main__":
                                     sampler=sampler,
                                     use_cache=cache,
                                     num_threads=3,
-                                    similarity_function=EmbeddingCosineSimilarity())
+                                    value_function=EmbeddingCosineSimilarity())
             
             start_time = time.perf_counter() # Start clock
             result = shap.attribution()

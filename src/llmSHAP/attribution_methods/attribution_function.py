@@ -22,7 +22,7 @@ class AttributionFunction:
                  verbose: bool = True,
                  logging: bool = False,
                  log_filename: str = "log",
-                 similarity_function: Optional[ValueFunction] = None,
+                 value_function: Optional[ValueFunction] = None,
                  ):
         self.model = model
         self.data_handler = data_handler
@@ -31,14 +31,14 @@ class AttributionFunction:
         self.verbose = verbose
         self.logging = logging
         self.log_filename = log_filename
-        self.similarity_function = similarity_function or TFIDFCosineSimilarity()
+        self.value_function = value_function or TFIDFCosineSimilarity()
         ####
         self.cache = {}
         self._cache_lock = threading.Lock()
         self.result: ResultMapping = {}
 
     def _v(self, base_output: Generation, new_output: Generation) -> float:
-        return self.similarity_function(str(base_output.output), str(new_output.output))
+        return self.value_function(str(base_output.output), str(new_output.output))
     
     def _normalized_result(self) -> ResultMapping:
         total = sum([abs(value["score"]) for value in self.result.values()])

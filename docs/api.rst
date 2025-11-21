@@ -1,19 +1,6 @@
 API Reference
 =============
 
-Top-level Package
------------------
-.. automodule:: llmSHAP
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Core Types
-----------
-.. automodule:: llmSHAP.types
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 Data Handling
 -------------
@@ -36,9 +23,9 @@ Generations
    :undoc-members:
    :show-inheritance:
 
-Similarity Functions
+Value Functions
 --------------------
-.. automodule:: llmSHAP.similarity_functions
+.. automodule:: llmSHAP.value_functions
    :members:
    :undoc-members:
    :show-inheritance:

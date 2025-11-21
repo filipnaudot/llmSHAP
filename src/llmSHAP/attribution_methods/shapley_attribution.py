@@ -25,7 +25,7 @@ class ShapleyAttribution(AttributionFunction):
         verbose: bool = True,
         logging: bool = False,
         num_threads: int = 1,
-        similarity_function: Optional[ValueFunction] = None,
+        value_function: Optional[ValueFunction] = None,
     ):
         super().__init__(
             model,
@@ -34,7 +34,7 @@ class ShapleyAttribution(AttributionFunction):
             use_cache=use_cache,
             verbose=verbose,
             logging=logging,
-            similarity_function=similarity_function,
+            value_function=value_function,
         )
         self.num_threads = num_threads
         self.num_players = len(self.data_handler.get_keys(exclude_permanent_keys=True))
