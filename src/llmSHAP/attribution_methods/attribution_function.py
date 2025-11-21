@@ -37,8 +37,8 @@ class AttributionFunction:
         self._cache_lock = threading.Lock()
         self.result: ResultMapping = {}
 
-    def _v(self, base_output: Generation, new_output: Generation) -> float:
-        return self.value_function(str(base_output.output), str(new_output.output))
+    def _v(self, base_generation: Generation, coalition_generation: Generation) -> float:
+        return self.value_function(base_generation, coalition_generation)
     
     def _normalized_result(self) -> ResultMapping:
         total = sum([abs(value["score"]) for value in self.result.values()])

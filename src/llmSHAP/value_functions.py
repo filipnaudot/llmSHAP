@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from functools import lru_cache
 
 from llmSHAP.types import TYPE_CHECKING, ClassVar, Optional
+from llmSHAP.generation import Generation
 
 if TYPE_CHECKING:
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -11,8 +12,27 @@ if TYPE_CHECKING:
 
 class ValueFunction(ABC):
     @abstractmethod
-    def __call__(self, s1: str, s2: str) -> float:
-        pass
+    def __call__(self, base_generation: Generation, coalition_generation: Generation) -> float:
+        """
+        Takes the base (reference / grand-coalition) generation with a
+        coalition-specific generation. This allows the user to either
+        compare them or focus only on the coalition specific generation.
+
+        Parameters
+        ----------
+        base:
+            The generation from the *full* / reference context. You may ignore
+            this if your metric only depends on the coalition.
+        coalition:
+            The generation produced from a specific coalition (subset of
+            features).
+
+        Returns
+        -------
+        float
+            A scalar score.
+        """
+        raise NotImplementedError
 
 
 #########################################################
@@ -38,8 +58,11 @@ class TFIDFCosineSimilarity(ValueFunction):
             print(f"Initializing TfidfVectorizer...")
             TFIDFCosineSimilarity._vectorizer = TfidfVectorizer()
 
+    def __call__(self, g1: Generation, g2: Generation) -> float:
+        return self._cached(g1.output, g2.output)
+    
     @lru_cache(maxsize=2_000)
-    def __call__(self, string1: str, string2: str) -> float:
+    def _cached(self, string1: str, string2: str) -> float:
         if not string1.strip() or not string2.strip(): return 0.0
         assert self._vectorizer is not None
         vectors = self._vectorizer.fit_transform([string1, string2])
@@ -68,8 +91,11 @@ class EmbeddingCosineSimilarity(ValueFunction):
             print(f"Loading sentence transformer model {model_name}...")
             EmbeddingCosineSimilarity._model = SentenceTransformer(model_name)
 
+    def __call__(self, g1: Generation, g2: Generation) -> float:
+        return self._cached(g1.output, g2.output)
+    
     @lru_cache(maxsize=2_000)
-    def __call__(self, string1: str, string2: str) -> float:
+    def _cached(self, string1: str, string2: str) -> float:
         if not string1.strip() or not string2.strip(): return 0.0
         assert self._model is not None
         embeddings = self._model.encode([string1, string2], convert_to_tensor=True)

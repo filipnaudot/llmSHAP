@@ -1,6 +1,7 @@
 import pytest
-from llmSHAP import TFIDFCosineSimilarity, EmbeddingCosineSimilarity
 
+from llmSHAP import TFIDFCosineSimilarity, EmbeddingCosineSimilarity
+from llmSHAP.generation import Generation
 
 
 @pytest.fixture(scope="module")
@@ -24,14 +25,14 @@ def sentences():
 ])
 def test_similarity_scores_order(sentences, similarity_function):
     source, similar, dissimilar = sentences
-    score_sim = similarity_function(source, similar)
-    score_diff = similarity_function(source, dissimilar)
+    score_sim = similarity_function(Generation(output=source), Generation(output=similar))
+    score_diff = similarity_function(Generation(output=source), Generation(output=dissimilar))
     assert score_sim > score_diff
 
 def test_empty_strings_return_zero():
     tfidf = TFIDFCosineSimilarity()
     embedding = EmbeddingCosineSimilarity()
-    assert tfidf("", "") == 0.0
-    assert tfidf("Hello", "") == 0.0
-    assert embedding("", "") == 0.0
-    assert embedding("Hello", "") == 0.0
+    assert tfidf(Generation(output=""), Generation(output="")) == 0.0
+    assert tfidf(Generation(output="Hello"), Generation(output="")) == 0.0
+    assert embedding(Generation(output=""), Generation(output="")) == 0.0
+    assert embedding(Generation(output="Hello"), Generation(output="")) == 0.0
