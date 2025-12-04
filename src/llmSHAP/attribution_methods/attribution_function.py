@@ -35,6 +35,7 @@ class AttributionFunction:
         ####
         self.cache = {}
         self._cache_lock = threading.Lock()
+        self._log_lock = threading.Lock()
         self.result: ResultMapping = {}
 
     def _v(self, base_generation: Generation, coalition_generation: Generation) -> float:
@@ -74,9 +75,10 @@ class AttributionFunction:
 
         log_path = os.path.join("logs", f"{self.log_filename}.jsonl")
 
-        with open(log_path, "a", encoding="utf-8") as f:
-            json.dump(log_data, f, indent=4, ensure_ascii=False)
-            f.write("\n")
+        with self._log_lock:
+            with open(log_path, "a", encoding="utf-8") as f:
+                json.dump(log_data, f, indent=4, ensure_ascii=False)
+                f.write("\n")
 
     def _add_feature_score(self, feature, score) -> None:
         for key, value in self.data_handler.get_data(feature, mask=False, exclude_permanent_keys=True).items():
