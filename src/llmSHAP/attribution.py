@@ -40,12 +40,12 @@ class Attribution:
         """Return the value of the grand coalition."""
         return self._grand_coalition_value
 
-    def render(self, abs_values: bool = False) -> str:
+    def render(self, abs_values: bool = False, render_labels: bool = False) -> str:
         RESET="\033[0m"
         FG="\033[38;5;0m"
         BG=lambda s:(lambda s: f"\033[48;5;{196+7*round((1-s)*4)}m" if s>=0 else f"\033[48;5;{16+42*round((1+s)*4)+5}m")(max(-1,min(1,s)))
         return " ".join(
             f"{BG(abs(item.get('score', 0)) if abs_values else item.get('score', 0))}"
-            f"{FG} {item.get('value', '')} {RESET}"
-            for item in self._attribution.values()
+            f"{FG} {(key if render_labels else item.get('value', ''))} {RESET}"
+            for key, item in self._attribution.items()
         )
