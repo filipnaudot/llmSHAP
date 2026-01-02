@@ -9,7 +9,7 @@
 ![Unit Tests](https://github.com/filipnaudot/llmSHAP/actions/workflows/test.yml/badge.svg)
 [![Documentation](https://img.shields.io/badge/docs-online-blue.svg)](https://filipnaudot.github.io/llmSHAP/)
 
-Lightweight explainability framework using Shapley values for LLM-based outputs.
+A multi-threaded explainability framework using Shapley values for LLM-based outputs.
 
 ---
 
