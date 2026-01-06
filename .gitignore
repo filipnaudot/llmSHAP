@@ -1,6 +1,7 @@
 test.py
 playground.py
 .DS_Store
+.vscode
 
 # Logs
 /logs
