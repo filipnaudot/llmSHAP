@@ -3,10 +3,10 @@ from llmSHAP.llm.llm_interface import LLMInterface
 from llmSHAP.generation import Generation
 from llmSHAP.data_handler import DataHandler
 from llmSHAP.prompt_codec import BasicPromptCodec
-
+from llmSHAP.types import Optional, Any
 
 class MockLLM(LLMInterface):
-    def generate(self, prompt) -> str:
+    def generate(self, prompt, tools: Optional[list[Any]] = None) -> str:
         return str(prompt)
     def name(self): return "fake"
     def is_local(self): return True

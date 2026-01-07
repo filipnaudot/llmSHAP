@@ -54,7 +54,8 @@ class AttributionFunction:
                     return self.cache[frozen_coalition]
         
         prompt = self.prompt_codec.build_prompt(self.data_handler, coalition)
-        generation = self.model.generate(prompt)
+        tools = self.prompt_codec.get_tools(self.data_handler, coalition)
+        generation = self.model.generate(prompt, tools=tools)
         parsed_generation: Generation = self.prompt_codec.parse_generation(generation)
         
         if self.use_cache:

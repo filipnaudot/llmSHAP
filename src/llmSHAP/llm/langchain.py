@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Callable
 
 from llmSHAP.types import Prompt, Type
 from llmSHAP.llm.llm_interface import LLMInterface
@@ -14,7 +14,13 @@ except ImportError:
 
 
 class LangChainInterface(LLMInterface):
-    def __init__(self, chat_model: Any, name: Optional[str] = None, is_local: bool = False):
+    def __init__(
+        self,
+        chat_model: Any,
+        name: Optional[str] = None,
+        is_local: bool = False,
+        tool_factory: Optional[Callable[[list[Any]], Any]] = None,
+    ):
         if not _HAS_LANGCHAIN:
             raise ImportError(
                 "LangChainInterface requires langchain-core.\n"
@@ -23,14 +29,24 @@ class LangChainInterface(LLMInterface):
         self.chat_model = chat_model
         self._name = name or getattr(chat_model, "model_name", chat_model.__class__.__name__)
         self._is_local = is_local
+        self._tool_factory = tool_factory
 
-    def generate(self, prompt: Prompt) -> str:
+    def generate(self, prompt: Prompt, tools: Optional[list[Any]] = None) -> str:
         messages = self._prompt_to_messages(prompt)
+        model = self.chat_model
+        if tools:
+            if self._tool_factory is not None:
+                model = self._tool_factory(tools)
+            elif hasattr(model, "bind_tools"):
+                try:
+                    model = model.bind_tools(tools)
+                except Exception:
+                    model = self.chat_model
         try:
-            result = self.chat_model.invoke(messages)
+            result = model.invoke(messages)
         except Exception as exc:
             try:
-                result = self.chat_model.invoke({"messages": messages})
+                result = model.invoke({"messages": messages})
             except Exception:
                 raise exc
             if isinstance(result, dict) and result.get("messages"):

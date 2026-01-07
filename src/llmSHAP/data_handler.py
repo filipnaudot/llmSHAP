@@ -1,7 +1,7 @@
 from __future__ import annotations
 import copy
 
-from llmSHAP.types import Dict, Set, Index, IndexSelection, DataMapping
+from llmSHAP.types import Dict, Set, Index, IndexSelection, DataMapping, Any
 
 
 
@@ -24,7 +24,13 @@ class DataHandler:
         self.permanent_indexes: Set[Index] = {
             index for index, key in self.key_enum.items() if key in self.permanent_keys
         }
-
+    
+    @staticmethod
+    def _is_callable(item: Any) -> bool:
+        if callable(item) or hasattr(item, "invoke") or hasattr(item, "run"):
+            return True
+        return False
+    
     @staticmethod
     def _to_set(selection: IndexSelection) -> Set[Index]:
         """Return a *set* regardless of whether caller passed int or iterable."""
@@ -99,6 +105,18 @@ class DataHandler:
             if mask or index in index_set
         }
 
+    def tool_list(
+        self,
+        indexes: IndexSelection,
+        *,
+        exclude_permanent_keys: bool = False,
+    ) -> list[Any]:
+        """
+        Return a list of the available tools at the given indexes.
+        """
+        view = self.get_data(indexes, mask=False, exclude_permanent_keys=exclude_permanent_keys)
+        return [tool for tool in view.values() if self._is_callable(tool)]
+
     def to_string(
         self,
         indexes: IndexSelection | None = None,
@@ -113,4 +131,4 @@ class DataHandler:
             indexes = self.get_keys(exclude_permanent_keys=exclude_permanent_keys)
 
         view = self.get_data(indexes, mask=mask, exclude_permanent_keys=exclude_permanent_keys)
-        return " ".join(str(value) for value in view.values())
+        return " ".join(value for value in view.values() if not self._is_callable(value))
