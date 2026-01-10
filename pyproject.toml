@@ -36,7 +36,11 @@ dependencies = [
 openai     = ["openai", "python-dotenv"]
 embeddings = ["sentence-transformers"]
 dev        = ["pytest", "matplotlib", "ipywidgets", "sphinx", "myst-parser", "sphinx-book-theme", "sphinx-design"]
-full       = ["llmSHAP[openai]", "llmSHAP[embeddings]", "llmSHAP[dev]"]
+full       = [
+  "openai", "python-dotenv",
+  "sentence-transformers",
+  "pytest", "matplotlib", "ipywidgets", "sphinx", "myst-parser", "sphinx-book-theme", "sphinx-design",
+]
 
 [project.urls]
 Homepage = "https://github.com/filipnaudot/llmSHAP"
