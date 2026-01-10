@@ -1,0 +1,5 @@
+prune analysis
+prune docs
+prune tests
+prune env
+prune logs

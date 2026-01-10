@@ -9,13 +9,24 @@ include = ["llmSHAP*"]
 [project]
 name = "llmSHAP"
 version = "0.1.0"
-description = "llmSHAP"
+description = "Multi-threaded Shapley explainability for LLMs: words, sentences, documents, and tools."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
   { name = "Filip Naudot" },
 ]
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 
 dependencies = [
   "tqdm",
@@ -27,3 +38,9 @@ openai     = ["openai", "python-dotenv"]
 embeddings = ["sentence-transformers"]
 dev        = ["pytest", "matplotlib", "ipywidgets", "sphinx", "myst-parser", "sphinx-book-theme", "sphinx-design"]
 full       = ["llmSHAP[openai]", "llmSHAP[embeddings]", "llmSHAP[dev]"]
+
+[project.urls]
+Homepage = "https://github.com/filipnaudot/llmSHAP"
+Repository = "https://github.com/filipnaudot/llmSHAP"
+Documentation = "https://filipnaudot.github.io/llmSHAP/"
+Issues = "https://github.com/filipnaudot/llmSHAP/issues"
