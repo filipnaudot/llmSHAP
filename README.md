@@ -14,17 +14,14 @@ A multi-threaded explainability framework using Shapley values for LLM-based out
 ---
 
 ## Getting started
-Install (from GitHub) as a package:
+Install the `llmshap` package (with all optional dependencies):
 ```bash
-pip install "llmSHAP[full] @ git+https://github.com/filipnaudot/llmSHAP.git"
+pip install "llmshap[full]"
 ```
 
 Install in editable mode with all optional dependencies (after cloning the repository):
 ```bash
-pip install -e .[full]  # for bash
-```
-```bash
-pip install -e '.[full]'  # for zsh
+pip install -e ".[full]"
 ```
 
 Documentation is available at [llmSHAP Docs](https://filipnaudot.github.io/llmSHAP/) and a hands-on tutorial can be found [here](https://filipnaudot.github.io/llmSHAP/tutorial.html).
