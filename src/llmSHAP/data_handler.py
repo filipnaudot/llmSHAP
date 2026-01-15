@@ -2,6 +2,7 @@ from __future__ import annotations
 import copy
 
 from llmSHAP.types import Dict, Set, Index, IndexSelection, DataMapping, Any
+from llmSHAP.image import Image
 
 
 
@@ -117,6 +118,18 @@ class DataHandler:
         view = self.get_data(indexes, mask=False, exclude_permanent_keys=exclude_permanent_keys)
         return [tool for tool in view.values() if self._is_callable(tool)]
 
+    def image_list(
+        self,
+        indexes: IndexSelection,
+        *,
+        exclude_permanent_keys: bool = False,
+    ) -> list[Image]:
+        """
+        Return a list of the available images at the given indexes.
+        """
+        view = self.get_data(indexes, mask=False, exclude_permanent_keys=exclude_permanent_keys)
+        return [image for image in view.values() if isinstance(image, Image)]
+
     def to_string(
         self,
         indexes: IndexSelection | None = None,
@@ -131,4 +144,7 @@ class DataHandler:
             indexes = self.get_keys(exclude_permanent_keys=exclude_permanent_keys)
 
         view = self.get_data(indexes, mask=mask, exclude_permanent_keys=exclude_permanent_keys)
-        return " ".join(value for value in view.values() if not self._is_callable(value))
+        return " ".join(
+            value for value in view.values()
+            if not self._is_callable(value) and not isinstance(value, Image)
+        )

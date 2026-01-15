@@ -24,6 +24,12 @@ class PromptCodec(ABC):
         """
         return []
 
+    def get_images(self, data_handler: DataHandler, indexes: IndexSelection) -> list[Any]:
+        """Retreive the available images at the given indexes.
+           Defaults to an emty list.
+        """
+        return []
+
 
 class BasicPromptCodec(PromptCodec):
     def __init__(self, system: str = ""):
@@ -37,6 +43,9 @@ class BasicPromptCodec(PromptCodec):
     
     def get_tools(self, data_handler: DataHandler, indexes: IndexSelection) -> list[Any]:
         return data_handler.tool_list(indexes)
+
+    def get_images(self, data_handler: DataHandler, indexes: IndexSelection) -> list[Any]:
+        return data_handler.image_list(indexes)
     
     def parse_generation(self, model_output: str) -> Generation:
         return Generation(output=model_output)

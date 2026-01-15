@@ -1,6 +1,8 @@
 from typing import Any, Optional, Callable
+import mimetypes
 
 from llmSHAP.types import Prompt, Type
+from llmSHAP.image import Image
 from llmSHAP.llm.llm_interface import LLMInterface
 
 try:
@@ -31,8 +33,13 @@ class LangChainInterface(LLMInterface):
         self._is_local = is_local
         self._tool_factory = tool_factory
 
-    def generate(self, prompt: Prompt, tools: Optional[list[Any]] = None) -> str:
-        messages = self._prompt_to_messages(prompt)
+    def generate(
+        self,
+        prompt: Prompt,
+        tools: Optional[list[Any]] = None,
+        images: Optional[list[Any]] = None,
+    ) -> str:
+        messages = self._prompt_to_messages(prompt, images=images)
         model = self.chat_model
         if tools:
             if self._tool_factory is not None:
@@ -54,16 +61,28 @@ class LangChainInterface(LLMInterface):
                 return getattr(last, "content", str(last)) or ""
         return getattr(result, "content", str(result)) or ""
     
-    def _prompt_to_messages(self, prompt: Prompt):
+    def _prompt_to_messages(self, prompt: Prompt, images: Optional[list[Any]] = None):
         role_map: dict[str, Type[BaseMessage]] = {
             "system": SystemMessage,
             "user": HumanMessage,
             "assistant": AIMessage,
         }
+        content_blocks = [
+            {"type": "image_url", "image_url": {"url": image.url}}
+            if image.url else
+            {"type": "image_url", "image_url": {"url": image.data_url(mimetypes.guess_type(image.image_path)[0] or "image/png")}} # type: ignore
+            for image in images or [] if isinstance(image, Image) and (image.url or image.image_path)
+        ]
+        
         messages = []
         for item in prompt:
-            msg_cls = role_map.get(item.get("role", "user")) or HumanMessage
-            messages.append(msg_cls(content=item.get("content", "")))
+            message_class = role_map.get(item.get("role", "user")) or HumanMessage
+            if content_blocks and item.get("role") == "user":
+                text = item.get("content", "")
+                messages.append(message_class(content=[{"type": "text", "text": text}, *content_blocks]))
+                content_blocks = [] # Reset so the images do not get duplicated
+            else:
+                messages.append(message_class(content=item.get("content", "")))
         return messages
 
     def is_local(self) -> bool:
