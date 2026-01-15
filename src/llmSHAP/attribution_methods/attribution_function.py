@@ -55,7 +55,8 @@ class AttributionFunction:
         
         prompt = self.prompt_codec.build_prompt(self.data_handler, coalition)
         tools = self.prompt_codec.get_tools(self.data_handler, coalition)
-        generation = self.model.generate(prompt, tools=tools)
+        images = self.prompt_codec.get_images(self.data_handler, coalition)
+        generation = self.model.generate(prompt, tools=tools, images=images)
         parsed_generation: Generation = self.prompt_codec.parse_generation(generation)
         
         if self.use_cache:

@@ -5,7 +5,7 @@ from typing import Optional
 
 @dataclass(frozen=True)
 class Image:
-    """Image holder for local paths or remote URLs.
+    """Image handler for local paths or remote URLs.
 
     Args:
         url: Remote image URL.

@@ -1,5 +1,6 @@
 import pytest
 from llmSHAP.data_handler import DataHandler
+from llmSHAP.image import Image
 
 def test_initialization():
     sample_data = {"a": "data_1", "b": 2222, "c": "data_3"}
@@ -115,3 +116,29 @@ def test_string_input():
 
     data_string = handler.to_string()
     assert data_string == "This is a string."
+
+def test_tool_list_filters_callables():
+    def tool(): return "ok"
+    sample = {"a": "hello", "b": tool, "c": "world"}
+    handler = DataHandler(sample)
+    tools = handler.tool_list({0, 1, 2})
+    assert tools == [tool]
+
+def test_image_list_filters_images():
+    image = Image(url="https://example.com/img.png")
+    sample = {"a": "hello", "b": image, "c": "world"}
+    handler = DataHandler(sample)
+    images = handler.image_list({0, 1, 2})
+    assert images == [image]
+
+def test_to_string_excludes_images():
+    image = Image(url="https://example.com/img.png")
+    sample = {"a": "hello", "b": image, "c": "world"}
+    handler = DataHandler(sample)
+    assert handler.to_string() == "hello world"
+
+def test_to_string_excludes_tools():
+    def tool(): return "ok"
+    sample = {"a": "hello", "b": tool, "c": "world"}
+    handler = DataHandler(sample)
+    assert handler.to_string() == "hello world"

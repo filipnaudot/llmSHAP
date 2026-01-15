@@ -1,6 +1,7 @@
-import gc, os
+import gc, os, mimetypes
 
 from llmSHAP.types import Prompt, Optional, Any
+from llmSHAP.image import Image
 from llmSHAP.llm.llm_interface import LLMInterface
 
 try:
@@ -38,7 +39,9 @@ class OpenAIInterface(LLMInterface):
         self,
         prompt: Prompt,
         tools: Optional[list[Any]] = None,
+        images: Optional[list[Any]] = None,
     ) -> str:
+        if images: prompt = self._attach_images(prompt, images)
         kwargs = dict(
             model=self.model_name,
             input=prompt,
@@ -54,3 +57,26 @@ class OpenAIInterface(LLMInterface):
     def name(self): return self.model_name
 
     def cleanup(self): pass
+
+    def _attach_images(self, prompt: Prompt, images: list[Any]) -> Prompt:
+        content_blocks: list[dict[str, Any]] = []
+        for item in images:
+            if isinstance(item, Image):
+                if item.url:
+                    content_blocks.append({"type": "input_image", "image_url": item.url})
+                elif item.image_path:
+                    mime = mimetypes.guess_type(item.image_path)[0] or "image/png"
+                    content_blocks.append({"type": "input_image", "image_url": item.data_url(mime)})
+        
+        if not content_blocks: return prompt
+        
+        updated_prompt: Prompt = []
+        attached = False
+        for message in prompt:
+            if not attached and message.get("role") == "user":
+                text = message.get("content", "")
+                updated_prompt.append({"role": "user", "content": [{"type": "input_text", "text": text}, *content_blocks]}) # type: ignore
+                attached = True
+            else:
+                updated_prompt.append(message)
+        return updated_prompt if attached else prompt

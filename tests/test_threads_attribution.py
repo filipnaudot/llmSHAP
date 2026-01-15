@@ -6,7 +6,7 @@ from llmSHAP.prompt_codec import BasicPromptCodec
 from llmSHAP.types import Optional, Any
 
 class MockLLM(LLMInterface):
-    def generate(self, prompt, tools: Optional[list[Any]] = None) -> str:
+    def generate(self, prompt, tools: Optional[list[Any]], images: Optional[list[Any]]) -> str:
         return str(prompt)
     def name(self): return "fake"
     def is_local(self): return True
