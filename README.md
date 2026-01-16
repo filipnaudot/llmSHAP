@@ -1,7 +1,7 @@
 <div align='center'>
     <picture>
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/llmSHAP-logo-lightmode.png">
-        <img alt="lighbench logo" src="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/llmSHAP-logo-darkmode.png" width="50%" height="50%">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/llmSHAP-logo-lightmode.png">
+        <img alt="lighbench logo" src="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/llmSHAP-logo-darkmode.png" width="50%" height="50%">
     </picture>
 </div>
 

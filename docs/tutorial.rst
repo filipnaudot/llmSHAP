@@ -151,7 +151,7 @@ The example below runs Shapley attribution on a 7-feature input string with
    plt.grid(True)
    plt.show()
 
-.. image:: ./llmSHAP_thread_analysis.png
+.. image:: ./_static/llmSHAP_thread_analysis.png
    :alt: Runtime vs Threads
    :align: center
    :width: 80%

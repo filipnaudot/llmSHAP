@@ -15,13 +15,13 @@ Documentation
    <br>
    <br>
 
-.. image:: ./llmSHAP-logo-lightmode.png
+.. image:: ./_static/llmSHAP-logo-lightmode.png
    :alt: llmSHAP logo
    :class: only-light
    :align: center
    :width: 50%
 
-.. image:: ./llmSHAP-logo-darkmode.png
+.. image:: ./_static/llmSHAP-logo-darkmode.png
    :alt: llmSHAP logo
    :class: only-dark
    :align: center

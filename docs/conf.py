@@ -26,7 +26,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath("../src"))
 
-html_logo = "./llmSHAP-logo-lightmode.png"
+html_logo = "./_static/llmSHAP-logo-lightmode.png"
 html_theme = "sphinx_book_theme"
 html_theme_options = {
     "repository_url": "https://github.com/filipnaudot/llmSHAP",
@@ -40,8 +40,8 @@ html_theme_options = {
     "use_fullscreen_button": False,
 
     "logo": {
-        "image_light": "./llmSHAP-logo-lightmode.png",
-        "image_dark": "./llmSHAP-logo-darkmode.png",
+        "image_light": "./_static/llmSHAP-logo-lightmode.png",
+        "image_dark": "./_static/llmSHAP-logo-darkmode.png",
         # "text": "llmSHAP",
         "alt_text": "llmSHAP documentation",
     }
