@@ -4,14 +4,6 @@ from llmSHAP.types import Prompt, Optional, Any
 from llmSHAP.image import Image
 from llmSHAP.llm.llm_interface import LLMInterface
 
-try:
-    from openai import OpenAI
-    from dotenv import load_dotenv
-    _HAS_OPENAI = True
-except ImportError:
-    _HAS_OPENAI = False
-
-
 class OpenAIInterface(LLMInterface):
     def __init__(self,
                  model_name: str,
@@ -19,7 +11,10 @@ class OpenAIInterface(LLMInterface):
                  max_tokens: int = 512,
                  seed: Optional[int] = None,
                  reasoning: Optional[str] = None,):
-        if not _HAS_OPENAI:
+        try:
+            from openai import OpenAI
+            from dotenv import load_dotenv
+        except ImportError:
             raise ImportError(
                 "OpenAIInterface requires the 'openai' extra.\n"
                 "Install with: pip install llmSHAP[openai]"
