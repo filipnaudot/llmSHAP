@@ -8,7 +8,7 @@
 # llmSHAP
 ![Unit Tests](https://github.com/filipnaudot/llmSHAP/actions/workflows/test.yml/badge.svg)
 [![Documentation](https://img.shields.io/badge/docs-online-blue.svg)](https://filipnaudot.github.io/llmSHAP/)
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/llmshap?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/llmshap)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/llmshap?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=GREEN&left_text=PyPI+downloads)](https://pepy.tech/projects/llmshap)
 
 A multi-threaded explainability framework using Shapley values for LLM-based outputs.
 
