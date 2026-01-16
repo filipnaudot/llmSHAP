@@ -12,36 +12,30 @@ Documentation
 
 .. raw:: html
 
-   <br>
-   <br>
+   <div class="landing-max-width-container">
+     <div>
+       <p>
+         <strong>llmSHAP</strong> quantifies how each input part influences an LLM response so you can audit, debug, and build trust in model behavior.
+       </p>
+     </div>
 
-.. image:: ./_static/llmSHAP-logo-lightmode.png
-   :alt: llmSHAP logo
-   :class: only-light
-   :align: center
-   :width: 50%
+     <div class="hero-button-center-row">
+       <a href="tutorial.html" class="get-started-pill-button">
+         <span>Get started</span>
+         <span class="get-started-button-arrow-circle">→</span>
+       </a>
+     </div>
 
-.. image:: ./_static/llmSHAP-logo-darkmode.png
-   :alt: llmSHAP logo
-   :class: only-dark
-   :align: center
-   :width: 50%
-
-.. raw:: html
-
-   <br>
-   <br>
-
-
-
-**What it is:**
-``llmSHAP`` is a Python library for attributing the contributions of different input parts to the output of **large language models (LLMs)**, using Shapley values.
-
-**Who it's for:**
-Researchers and developers working with LLMs who need insight into *why* a model produced a particular response.
-
-**Why it exists:**
-LLMs are powerful but often opaque. ``llmSHAP`` helps make their outputs interpretable by quantifying the impact of each input element on the result.
+     <div class="trusted-by-section-spacing">
+       <h3 class="trusted-by-title-caps">sponsored by</h3>
+       <div class="trusted-by-logo-grid">
+         <div class="trusted-by-logo-card">
+           <img src="_static/wasp-logo-lightmode.png" alt="WASP logo" class="trusted-by-logo-image-lightmode only-light">
+           <img src="_static/wasp-logodarkmode.png" alt="WASP logo" class="trusted-by-logo-image-darkmode only-dark">
+         </div>
+       </div>
+     </div>
+   </div>
 
 Contents
 --------

@@ -1,0 +1,99 @@
+.landing-max-width-container {
+  margin: 0 auto;
+  max-width: 70rem;
+}
+.hero-button-center-row {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+.get-started-pill-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 999px;
+  border: 1px solid #d0e000;
+  color: #141414;
+  background: #d8f200;
+  box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.18);
+  white-space: nowrap;
+  line-height: 1;
+}
+.get-started-pill-button:hover,
+.get-started-pill-button:visited,
+.get-started-pill-button:focus {
+  color: #141414 !important;
+  background: #d8f200 !important;
+  border-color: #d0e000 !important;
+}
+.get-started-pill-button:hover {
+  background: #cfe800 !important;
+  border-color: #c3da00 !important;
+}
+.get-started-pill-button:hover {
+  box-shadow: 0 0.35rem 0.9rem rgba(0,0,0,0.28);
+}
+@media (prefers-color-scheme: dark) {
+  .get-started-pill-button:hover {
+    box-shadow: 0 0.5rem 1rem rgba(216,242,0,0.6);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  .get-started-pill-button {
+    box-shadow: 0 0.5rem 1rem rgba(216,242,0,0.4);
+  }
+}
+.get-started-button-arrow-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 50%;
+  border: 0.125rem solid #141414;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+.trusted-by-section-spacing {
+  margin-top: 8rem;
+}
+.trusted-by-title-caps {
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.trusted-by-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.625rem;
+  justify-content: center;
+}
+.trusted-by-logo-card {
+  padding: 0.625rem 0.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+}
+.only-dark {
+  display: none;
+}
+html[data-theme="dark"] .only-light {
+  display: none;
+}
+html[data-theme="dark"] .only-dark {
+  display: inline-block;
+}
+.trusted-by-logo-image-lightmode {
+  display: inline-block;
+  max-width: 10rem;
+  height: auto;
+  margin-top: 0.375rem;
+}
+.trusted-by-logo-image-darkmode {
+  display: none;
+  max-width: 10rem;
+  height: auto;
+  margin-top: 0.375rem;
+}
