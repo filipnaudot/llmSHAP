@@ -31,7 +31,7 @@ Documentation is available at [llmSHAP Docs](https://filipnaudot.github.io/llmSH
 
 ---
 
-## Example usage
+# Example usage
 
 ```python
 from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
@@ -39,15 +39,12 @@ from llmSHAP.llm import OpenAIInterface
 
 data = "In what city is the Eiffel Tower?"
 handler = DataHandler(data, permanent_keys={0,3,4})
-prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
-llm = OpenAIInterface("gpt-4o-mini")
-
-shap = ShapleyAttribution(model=llm,
-                          data_handler=handler,
-                          prompt_codec=prompt_codec,
-                          use_cache=True,
-                          num_threads=7)
-result = shap.attribution()
+result = ShapleyAttribution(model=OpenAIInterface("gpt-4o-mini"),
+                            data_handler=handler,
+                            prompt_codec=BasicPromptCodec(system="Answer the question briefly."),
+                            use_cache=True,
+                            num_threads=16,
+                            ).attribution()
 
 print("\n\n### OUTPUT ###")
 print(result.output)
@@ -58,6 +55,48 @@ print(result.attribution)
 print("\n\n### HEATMAP ###")
 print(result.render())
 ```
+
+## Multimodal example with `Image`:
+```python
+from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution, EmbeddingCosineSimilarity, Image
+from llmSHAP.llm import OpenAIInterface
+
+data = {
+    "question": "Has our stockprice increased or decreased since the beginning?",
+    "Num employees"        : "The company has about 450 employees.",
+    "[IMAGE] Stock chart"  : Image(image_path="./docs/_static/demo-stock-price.png"),
+    "Report released date" : "Quarterly reports are released on the 15th.",
+    "Location"             : "The headquarters is located in a mid-sized city.",
+    "Num countries"        : "It has offices in three countries."
+}
+
+result = ShapleyAttribution(model=OpenAIInterface("gpt-5-mini", reasoning="medium"),
+                            data_handler=DataHandler(data, permanent_keys={"question"}),
+                            prompt_codec=BasicPromptCodec(system="Answer the question briefly."),
+                            use_cache=True,
+                            num_threads=35,
+                            ).attribution()
+
+print("\n\n### OUTPUT ###")
+print(result.output)
+
+print("\n\n### HEATMAP ###")
+print(result.render(abs_values=True, render_labels=True))
+```
+<div align='center'>
+    <picture>
+        <source media="(prefers-color-scheme: light)" srcset="docs/_static/example-result-lightmode.png">
+        <img alt="lighbench logo" src="docs/_static/example-result-lightmode.png" width="100%" height="100%">
+    </picture>
+</div>
+<!-- <div align='center'>
+    <picture>
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/llmSHAP-logo-lightmode.png">
+        <img alt="lighbench logo" src="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/llmSHAP-logo-darkmode.png" width="50%" height="50%">
+    </picture>
+</div> -->
+
+
 
 ---
 
