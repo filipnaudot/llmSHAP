@@ -86,7 +86,7 @@ print(result.render(abs_values=True, render_labels=True))
 <div align='center'>
     <picture>
         <source media="(prefers-color-scheme: light)" srcset="docs/_static/example-result-lightmode.png">
-        <img alt="lighbench logo" src="docs/_static/example-result-lightmode.png" width="100%" height="100%">
+        <img alt="lighbench logo" src="docs/_static/example-result-darkmode.png" width="100%" height="100%">
     </picture>
 </div>
 <!-- <div align='center'>
