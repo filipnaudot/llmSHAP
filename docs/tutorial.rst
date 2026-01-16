@@ -17,11 +17,11 @@ First, install ``llmSHAP`` in editable mode with development dependencies:
 
          pip install "llmshap[full]"
 
-   .. tab-item:: zsh
+   .. tab-item:: clone
 
-      .. code-block:: clone
+      .. code-block:: bash
 
-         pip install -e '.[full]'
+         pip install -e ".[full]"
 
 
 
