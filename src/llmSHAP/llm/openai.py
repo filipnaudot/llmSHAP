@@ -46,9 +46,9 @@ class OpenAIInterface(LLMInterface):
             model=self.model_name,
             input=prompt,
             max_output_tokens=self.max_tokens,
-            temperature=self.temperature,
         )
         if self.reasoning is not None: kwargs["reasoning"] = self.reasoning # type: ignore[arg-type]
+        elif self.model_name in {"gpt-5.1", "gpt-5.2"}: kwargs["temperature"] = self.temperature # type: ignore[arg-type]
         response = self.client.responses.create(**kwargs) # type: ignore[arg-type]
         return response.output_text or ""
 
