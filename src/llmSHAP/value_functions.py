@@ -65,7 +65,7 @@ class TFIDFCosineSimilarity(ValueFunction):
         assert self._vectorizer is not None
         assert type(self)._cosine_similarity is not None
         vectors = self._vectorizer.fit_transform([string1, string2])
-        return float(type(self)._cosine_similarity(vectors)[0, 1])
+        return float(type(self)._cosine_similarity(vectors)[0, 1]) # type: ignore
 
 
 #########################################################
