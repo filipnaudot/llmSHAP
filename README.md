@@ -1,7 +1,7 @@
 <div align='center'>
     <picture>
         <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/llmSHAP-logo-lightmode.png">
-        <img alt="lighbench logo" src="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/llmSHAP-logo-darkmode.png" width="50%" height="50%">
+        <img alt="llmSHAP logo" src="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/llmSHAP-logo-darkmode.png" width="50%" height="50%">
     </picture>
 </div>
 
@@ -90,7 +90,7 @@ print(result.render(abs_values=True, render_labels=True))
 <div align='center'>
     <picture>
         <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/example-result-lightmode.png">
-        <img alt="lighbench logo" src="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/example-result-darkmode.png" width="100%" height="100%">
+        <img alt="llmSHAP logo" src="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/example-result-darkmode.png" width="100%" height="100%">
     </picture>
 </div>
 
