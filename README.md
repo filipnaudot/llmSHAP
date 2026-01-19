@@ -146,3 +146,13 @@ print(handler.get_data({1}, exclude_permanent_keys=False, mask=False))
 | Docs & tutorial                                                           | ✅ Sphinx docs + tutorial                                    | ✅ README only                 |
 | Unit tests & CI                                                           | ✅ Pytest + GitHub Actions                                   | ❌                              |
 | Vision object attribution                                                 | ❌                                                           | ✅ PixelSHAP                   |
+
+---
+
+<br/>
+<br/>
+<br/>
+
+# Stars ⭐️
+
+[![Star History Chart](https://api.star-history.com/svg?repos=filipnaudot/llmSHAP&type=Date&legend=top-left)](https://www.star-history.com/#filipnaudot/llmSHAP&type=date&legend=top-left)
