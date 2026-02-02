@@ -47,12 +47,6 @@ class OpenAIInterface(LLMInterface):
         response = self.client.responses.create(**kwargs) # type: ignore[arg-type]
         return response.output_text or ""
 
-    def is_local(self): return False
-
-    def name(self): return self.model_name
-
-    def cleanup(self): pass
-
     def _attach_images(self, prompt: Prompt, images: list[Any]) -> Prompt:
         content_blocks: list[dict[str, Any]] = []
         for item in images:

@@ -12,14 +12,3 @@ class LLMInterface(ABC):
     ) -> str:
         pass
     
-    @abstractmethod
-    def name(self) -> str:
-        pass
-
-    @abstractmethod
-    def is_local(slef) -> bool:
-        pass
-
-    @abstractmethod
-    def cleanup(self):
-        pass

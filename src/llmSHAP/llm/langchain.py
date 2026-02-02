@@ -20,7 +20,6 @@ class LangChainInterface(LLMInterface):
         self,
         chat_model: Any,
         name: Optional[str] = None,
-        is_local: bool = False,
         tool_factory: Optional[Callable[[list[Any]], Any]] = None,
     ):
         if not _HAS_LANGCHAIN:
@@ -30,7 +29,6 @@ class LangChainInterface(LLMInterface):
             ) from None
         self.chat_model = chat_model
         self._name = name or getattr(chat_model, "model_name", chat_model.__class__.__name__)
-        self._is_local = is_local
         self._tool_factory = tool_factory
 
     def generate(
@@ -84,12 +82,3 @@ class LangChainInterface(LLMInterface):
             else:
                 messages.append(message_class(content=item.get("content", "")))
         return messages
-
-    def is_local(self) -> bool:
-        return self._is_local
-
-    def name(self) -> str:
-        return self._name
-
-    def cleanup(self):
-        pass
