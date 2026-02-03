@@ -4,8 +4,12 @@
         <img alt="llmSHAP logo" src="https://raw.githubusercontent.com/filipnaudot/llmSHAP/main/docs/_static/llmSHAP-logo-darkmode.png" width="50%" height="50%">
     </picture>
 </div>
+<br/>
+<br/>
+<br/>
 
-# llmSHAP
+---
+
 ![Unit Tests](https://github.com/filipnaudot/llmSHAP/actions/workflows/test.yml/badge.svg)
 [![Documentation](https://img.shields.io/badge/docs-online-blue.svg)](https://filipnaudot.github.io/llmSHAP/)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/llmshap?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=GREEN&left_text=PyPI+downloads)](https://pepy.tech/projects/llmshap)
