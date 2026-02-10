@@ -50,11 +50,13 @@ class ShapleyAttribution(AttributionFunction):
 
     def attribution(self):
         start = time.perf_counter()
+        if self.verbose: print(f"Generating base output...")
         base_generation: Generation = self._get_output(self.data_handler.get_keys())
         grand_coalition_value = self._v(base_generation, base_generation)
         empty_baseline_value = self._v(base_generation, self._get_output(set()))
         non_permanent_keys = self.data_handler.get_keys(exclude_permanent_keys=True)
 
+        if self.verbose: print(f"Generating coalition outputs...")
         with tqdm(self.data_handler.get_keys(), desc="Features", position=0, leave=False, disable=not self.verbose,) as feature_bar:
             for feature in feature_bar:
                 if feature in self.data_handler.permanent_indexes: self._add_feature_score(feature, 0); continue

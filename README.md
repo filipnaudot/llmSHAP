@@ -5,10 +5,6 @@
     </picture>
 </div>
 <br/>
-<br/>
-<br/>
-
----
 
 ![Unit Tests](https://github.com/filipnaudot/llmSHAP/actions/workflows/test.yml/badge.svg)
 [![Documentation](https://img.shields.io/badge/docs-online-blue.svg)](https://filipnaudot.github.io/llmSHAP/)
