@@ -1,6 +1,6 @@
 import time
 from tqdm.auto import tqdm
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from math import fsum
 
 from llmSHAP.prompt_codec import PromptCodec
@@ -42,42 +42,37 @@ class ShapleyAttribution(AttributionFunction):
 
 
 
-    def _compute_marginal_contribution(self, coalition_set: set[Index], feature: Index, weight:float, base_generation: Generation):
+    def _compute_marginal_contribution(self, coalition_set: set[Index], feature: Index, weight: float, base_future: Future):
         generation_without = self._get_output(coalition_set)
         generation_with = self._get_output(coalition_set | {feature})
+        base_generation: Generation = base_future.result()
         return weight * (self._v(base_generation, generation_with) - self._v(base_generation, generation_without))
 
 
     def attribution(self):
         start = time.perf_counter()
-        if self.verbose: print(f"Generating base output...")
-        base_generation: Generation = self._get_output(self.data_handler.get_keys())
+        with ThreadPoolExecutor(max_workers = 1) as base_executor:
+            base_future: Future = base_executor.submit(self._get_output, self.data_handler.get_keys())
+            with tqdm(self.data_handler.get_keys(), desc="Features", position=0, leave=False, disable=not self.verbose,) as feature_bar:
+                for feature in feature_bar:
+                    if feature in self.data_handler.permanent_indexes: self._add_feature_score(feature, 0); continue
+                    shapley_value = 0.0
+                    tasks = []
+                    with ThreadPoolExecutor(max_workers = max(1, self.num_threads - 1)) as executor:
+                        for coalition_set, weight in list(self.sampler(feature, self.data_handler.get_keys(exclude_permanent_keys=True))):
+                            tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_future))
+
+                        with tqdm(total=len(tasks), desc=f"Coalitions", position=1, leave=False, disable=not self.verbose) as coalition_bar:
+                            contributions = []
+                            for future in as_completed(tasks):
+                                contributions.append(future.result())
+                                coalition_bar.update(1)
+                    shapley_value = fsum(contributions)
+                    self._add_feature_score(feature, shapley_value)
+            base_generation: Generation = base_future.result()
+
         grand_coalition_value = self._v(base_generation, base_generation)
         empty_baseline_value = self._v(base_generation, self._get_output(set()))
-        non_permanent_keys = self.data_handler.get_keys(exclude_permanent_keys=True)
-
-        if self.verbose: print(f"Generating coalition outputs...")
-        with tqdm(self.data_handler.get_keys(), desc="Features", position=0, leave=False, disable=not self.verbose,) as feature_bar:
-            for feature in feature_bar:
-                if feature in self.data_handler.permanent_indexes: self._add_feature_score(feature, 0); continue
-
-                shapley_value = 0.0
-                tasks = []
-                with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
-                    for coalition_set, weight in list(self.sampler(feature, non_permanent_keys)):
-                        tasks.append(executor.submit(self._compute_marginal_contribution, coalition_set, feature, weight, base_generation))
-
-                    with tqdm(total=len(tasks), desc=f"Coalitions", position=1, leave=False, disable=not self.verbose) as coalition_bar:
-                        contributions = []
-                        for future in as_completed(tasks):
-                            contributions.append(future.result())
-                            coalition_bar.update(1)
-                shapley_value = fsum(contributions)
-
-
-                self._add_feature_score(feature, shapley_value)
-
         stop = time.perf_counter()
         if self.verbose: print(f"Time ({self.num_players} features): {(stop - start):.2f} seconds.")
-        
         return Attribution(self.result, base_generation.output, empty_baseline_value, grand_coalition_value)
