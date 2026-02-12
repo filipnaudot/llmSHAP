@@ -53,6 +53,7 @@ class ShapleyAttribution(AttributionFunction):
         start = time.perf_counter()
         with ThreadPoolExecutor(max_workers = 1) as base_executor:
             base_future: Future = base_executor.submit(self._get_output, self.data_handler.get_keys())
+            empty_future: Future = base_executor.submit(self._get_output, set())
             with tqdm(self.data_handler.get_keys(), desc="Features", position=0, leave=False, disable=not self.verbose,) as feature_bar:
                 for feature in feature_bar:
                     if feature in self.data_handler.permanent_indexes: self._add_feature_score(feature, 0); continue
@@ -70,9 +71,9 @@ class ShapleyAttribution(AttributionFunction):
                     shapley_value = fsum(contributions)
                     self._add_feature_score(feature, shapley_value)
             base_generation: Generation = base_future.result()
-
+            empty_generation: Generation = empty_future.result()
         grand_coalition_value = self._v(base_generation, base_generation)
-        empty_baseline_value = self._v(base_generation, self._get_output(set()))
+        empty_baseline_value = self._v(base_generation, empty_generation)
         stop = time.perf_counter()
         if self.verbose: print(f"Time ({self.num_players} features): {(stop - start):.2f} seconds.")
         return Attribution(self.result, base_generation.output, empty_baseline_value, grand_coalition_value)
