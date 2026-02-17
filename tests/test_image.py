@@ -1,4 +1,5 @@
 import base64
+import builtins
 import pytest
 
 from llmSHAP.image import Image
@@ -34,3 +35,26 @@ def test_data_url_requires_mime():
     image = Image(image_path="path/to/image.png")
     with pytest.raises(ValueError):
         image.data_url("")
+
+def test_encoded_image_is_cached_for_same_file(tmp_path, monkeypatch):
+    content = b"cache-me"
+    image_path = tmp_path / "img.png"
+    image_path.write_bytes(content)
+    image = Image(image_path=str(image_path))
+
+    Image._encoded_from_path.cache_clear()
+    open_calls = {"count": 0}
+    real_open = builtins.open
+
+    def counting_open(*args, **kwargs):
+        if args and args[0] == str(image_path): open_calls["count"] += 1
+        return real_open(*args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", counting_open)
+    encoded_once = image.encoded_image()
+    encoded_twice = image.encoded_image()
+    data_url = image.data_url("image/png")
+
+    assert encoded_once == encoded_twice
+    assert data_url == f"data:image/png;base64,{encoded_once}"
+    assert open_calls["count"] == 1

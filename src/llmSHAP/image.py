@@ -1,5 +1,6 @@
 import base64
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Optional
 
 
@@ -21,12 +22,17 @@ class Image:
     url: Optional[str] = None
     image_path: Optional[str] = None
 
+    @staticmethod
+    @lru_cache(maxsize=256)
+    def _encoded_from_path(image_path: str) -> str:
+        with open(image_path, "rb") as image_file:
+            return base64.b64encode(image_file.read()).decode("utf-8")
+
     def encoded_image(self) -> str:
         """Return the base64-encoded contents of the local image."""
         if not self.image_path:
             raise ValueError("image_path is required to encode an image.")
-        with open(self.image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode("utf-8")
+        return self._encoded_from_path(self.image_path)
 
     def data_url(self, mime_type: str) -> str:
         """Return a data URL for the local image using the given MIME type."""
