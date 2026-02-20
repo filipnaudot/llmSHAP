@@ -7,7 +7,7 @@ Tutorials
 
 Getting started
 ------------------------------------
-First, install ``llmSHAP`` in editable mode with development dependencies:
+First, install ``llmSHAP`` with the recommended extras:
 
 .. tab-set::
 
@@ -15,13 +15,13 @@ First, install ``llmSHAP`` in editable mode with development dependencies:
 
       .. code-block:: bash
 
-         pip install "llmshap[full]"
+         pip install "llmshap[all]"
 
    .. tab-item:: clone
 
       .. code-block:: bash
 
-         pip install -e ".[full]"
+         pip install -e ".[all]"
 
 
 
@@ -117,8 +117,8 @@ This assumes that the LLM inference backend can
 handle multiple concurrent inference requests, since the parallelization happens at the 
 inference call level. 
 
-The example below runs Shapley attribution on a 7-feature input string with 
-1-10 threads and measures the runtime.
+The example below runs Shapley attribution on a 7-feature input string with
+1-10 threads and measures the runtime (requires ``pip install matplotlib``).
 
 .. code-block:: python
 
