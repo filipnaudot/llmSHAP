@@ -1,12 +1,14 @@
 from abc import ABC, abstractmethod
+from collections import Counter
 from functools import lru_cache
+import math
 import os
+import re
 
 from llmSHAP.types import TYPE_CHECKING, ClassVar, Optional, Any
 from llmSHAP.generation import Generation
 
 if TYPE_CHECKING:
-    from sklearn.feature_extraction.text import TfidfVectorizer
     from sentence_transformers import SentenceTransformer
 
 
@@ -40,22 +42,24 @@ class ValueFunction(ABC):
 # Basic TFIDF-based Cosine Similarity Funciton.
 #########################################################
 class TFIDFCosineSimilarity(ValueFunction):
-    _vectorizer: ClassVar[Optional["TfidfVectorizer"]] = None
-    _cosine_similarity: ClassVar[Optional[Any]] = None
+    """
+    Minimal TF-IDF cosine similarity between two generation outputs.
 
-    def __init__(self):
-        try:
-            from sklearn.feature_extraction.text import TfidfVectorizer
-            from sklearn.metrics.pairwise import cosine_similarity
-        except ImportError:
-            raise ImportError(
-                "TFIDFCosineSimilarity requires the 'scikit-learn'.\n"
-                "Install with: pip install scikit-learn"
-            ) from None
-        if TFIDFCosineSimilarity._vectorizer is None:
-            print(f"Initializing TfidfVectorizer...")
-            TFIDFCosineSimilarity._vectorizer = TfidfVectorizer()
-            TFIDFCosineSimilarity._cosine_similarity = cosine_similarity
+    Notes
+    -----
+    - Computes TF-IDF on the compared pair only (2-document corpus).
+    - Returns `0.0` if either text is empty/whitespace.
+    - Tokenization uses the regex `(?u)\\b\\w\\w+\\b`:
+      includes 2+ character word tokens and splits on punctuation.
+
+    Example
+    -------
+    `"hello, world!"` -> `["hello", "world"]`
+    `"state-of-the-art"` -> `["state", "of", "the", "art"]`
+    `"a b c test"` -> `["test"]`
+    """
+    _token_pattern: ClassVar[re.Pattern[str]] = re.compile(r"(?u)\b\w\w+\b")
+    _DOCUMENT_COUNT = 2
 
     def __call__(self, g1: Generation, g2: Generation) -> float:
         return self._cached(g1.output, g2.output)
@@ -63,10 +67,33 @@ class TFIDFCosineSimilarity(ValueFunction):
     @lru_cache(maxsize=2_000)
     def _cached(self, string1: str, string2: str) -> float:
         if not string1.strip() or not string2.strip(): return 0.0
-        assert self._vectorizer is not None
-        assert type(self)._cosine_similarity is not None
-        vectors = self._vectorizer.fit_transform([string1, string2])
-        return float(type(self)._cosine_similarity(vectors)[0, 1]) # type: ignore
+
+        term_counts_document_1 = Counter(self._token_pattern.findall(string1.lower()))
+        term_counts_document_2 = Counter(self._token_pattern.findall(string2.lower()))
+        if not term_counts_document_1 or not term_counts_document_2: return 0.0
+
+        all_terms = set(term_counts_document_1) | set(term_counts_document_2)
+        term_idf: dict[str, float] = {}
+        for term in all_terms:
+            document_frequency = int(term in term_counts_document_1) + int(term in term_counts_document_2)
+            term_idf[term] = math.log((1.0 + self._DOCUMENT_COUNT) / (1.0 + document_frequency)) + 1.0
+
+        term_tfidf_document_1 = {term: float(term_count) * term_idf[term] 
+                                 for term, term_count in term_counts_document_1.items()}
+        term_tfidf_document_2 = {term: float(term_count) * term_idf[term]
+                                 for term, term_count in term_counts_document_2.items()}
+
+        if len(term_tfidf_document_1) > len(term_tfidf_document_2):
+            term_tfidf_document_1, term_tfidf_document_2 = term_tfidf_document_2, term_tfidf_document_1
+
+        dot_product = sum(tfidf_weight * term_tfidf_document_2.get(term, 0.0)
+                          for term, tfidf_weight in term_tfidf_document_1.items())
+        
+        norm_document_1 = math.sqrt(sum(weight * weight for weight in term_tfidf_document_1.values()))
+        norm_document_2 = math.sqrt(sum(weight * weight for weight in term_tfidf_document_2.values()))
+        if norm_document_1 == 0.0 or norm_document_2 == 0.0: return 0.0
+        return dot_product / (norm_document_1 * norm_document_2)
+
 
 
 #########################################################
