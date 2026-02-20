@@ -6,38 +6,54 @@ from llmSHAP import TFIDFCosineSimilarity, EmbeddingCosineSimilarity
 from llmSHAP.generation import Generation
 
 
-# @pytest.fixture(scope="module")
-# def sentences():
-#     source = (
-#         "Apple unveiled its latest AI-powered chips, aiming to revolutionize on-device processing "
-#         "in the next generation of smartphones."
-#     )
-#     similar = (
-#         "The new smartphone features cutting-edge AI chips designed to boost performance and efficiency."
-#     )
-#     dissimilar = (
-#         "A local art gallery opened its summer exhibition with sculptures made entirely from recycled materials."
-#     )
-#     return source, similar, dissimilar
+@pytest.fixture(scope="module")
+def sample_sentences():
+    source_sentence = (
+        "Apple unveiled its latest AI-powered chips, aiming to revolutionize on-device processing "
+        "in the next generation of smartphones."
+    )
+    similar_sentence = (
+        "The new smartphone features cutting-edge AI chips designed to boost performance and efficiency."
+    )
+    dissimilar_sentence = (
+        "A local art gallery opened its summer exhibition with sculptures made entirely from recycled materials."
+    )
+    return source_sentence, similar_sentence, dissimilar_sentence
 
 
-# @pytest.mark.parametrize("similarity_function", [
-#     TFIDFCosineSimilarity(),
-#     EmbeddingCosineSimilarity()
-# ])
-# def test_similarity_scores_order(sentences, similarity_function):
-#     source, similar, dissimilar = sentences
-#     score_sim = similarity_function(Generation(output=source), Generation(output=similar))
-#     score_diff = similarity_function(Generation(output=source), Generation(output=dissimilar))
-#     assert score_sim > score_diff
+def test_tfidf_similarity_scores_order(sample_sentences):
+    source_sentence, similar_sentence, dissimilar_sentence = sample_sentences
+    tfidf_similarity = TFIDFCosineSimilarity()
 
-# def test_empty_strings_return_zero():
-#     tfidf = TFIDFCosineSimilarity()
-#     embedding = EmbeddingCosineSimilarity()
-#     assert tfidf(Generation(output=""), Generation(output="")) == 0.0
-#     assert tfidf(Generation(output="Hello"), Generation(output="")) == 0.0
-#     assert embedding(Generation(output=""), Generation(output="")) == 0.0
-#     assert embedding(Generation(output="Hello"), Generation(output="")) == 0.0
+    similar_score = tfidf_similarity(Generation(output=source_sentence), Generation(output=similar_sentence))
+    dissimilar_score = tfidf_similarity(Generation(output=source_sentence), Generation(output=dissimilar_sentence))
+
+    assert similar_score > dissimilar_score
+
+
+def test_tfidf_empty_strings_return_zero():
+    tfidf_similarity = TFIDFCosineSimilarity()
+    assert tfidf_similarity(Generation(output=""), Generation(output="")) == 0.0
+    assert tfidf_similarity(Generation(output="Hello"), Generation(output="")) == 0.0
+    assert tfidf_similarity(Generation(output=""), Generation(output="Hello")) == 0.0
+
+
+def test_tfidf_identical_text_returns_one():
+    tfidf_similarity = TFIDFCosineSimilarity()
+    score = tfidf_similarity(
+        Generation(output="minimal performant clean tfidf"),
+        Generation(output="minimal performant clean tfidf"),
+    )
+    assert score == pytest.approx(1.0, rel=1e-12)
+
+
+def test_tfidf_similarity_is_symmetric():
+    tfidf_similarity = TFIDFCosineSimilarity()
+    first_text = "alpha beta gamma gamma"
+    second_text = "alpha gamma delta"
+    forward_score = tfidf_similarity(Generation(output=first_text), Generation(output=second_text))
+    reverse_score = tfidf_similarity(Generation(output=second_text), Generation(output=first_text))
+    assert forward_score == pytest.approx(reverse_score, rel=1e-12)
 
 
 def test_openai_embedding_endpoint(monkeypatch):

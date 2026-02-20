@@ -29,7 +29,6 @@ classifiers = [
 
 dependencies = [
   "tqdm",
-  "scikit-learn",
 ]
 
 [project.optional-dependencies]
