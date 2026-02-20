@@ -12,7 +12,7 @@ Contributions of all sizes are welcome: bug reports, docs fixes, examples, new h
 Clone your fork and install the full dependency setup in editable mode. That is, using:
 
 ```bash
-pip install -e ".[full]"
+pip install -e ".[all]"
 ```
 
 The repo uses a `src/` layout (library code in `src/llmSHAP`) and tests in `tests/`.

@@ -8,8 +8,8 @@ include = ["llmSHAP*"]
 
 [project]
 name = "llmSHAP"
-version = "1.5.0"
-description = "Multi-threaded Shapley explainability for LLMs: words, sentences, documents, and tools."
+version = "1.5.1"
+description = "Multi-threaded explainability for LLMs: words, sentences, documents, images, and tools."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
@@ -35,11 +35,7 @@ dependencies = [
 openai     = ["openai", "python-dotenv"]
 embeddings = ["sentence-transformers"]
 dev        = ["pytest", "matplotlib", "ipywidgets", "sphinx", "myst-parser", "sphinx-book-theme", "sphinx-design"]
-full       = [
-  "openai", "python-dotenv",
-  "sentence-transformers",
-  "pytest", "matplotlib", "ipywidgets", "sphinx", "myst-parser", "sphinx-book-theme", "sphinx-design",
-]
+all        = ["openai", "python-dotenv"]
 
 [project.urls]
 Homepage = "https://github.com/filipnaudot/llmSHAP"

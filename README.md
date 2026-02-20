@@ -14,15 +14,15 @@ A multi-threaded explainability framework using Shapley values for LLM-based out
 
 ---
 
-## Getting started
+## Getting Started
 Install the `llmshap` package (with all optional dependencies):
 ```bash
-pip install "llmshap[full]"
+pip install "llmshap[all]"
 ```
 
 Install in editable mode with all optional dependencies (after cloning the repository):
 ```bash
-pip install -e ".[full]"
+pip install -e ".[all]"
 ```
 
 Documentation is available at [llmSHAP Docs](https://filipnaudot.github.io/llmSHAP/) and a hands-on tutorial can be found [here](https://filipnaudot.github.io/llmSHAP/tutorial.html).
@@ -32,7 +32,7 @@ Documentation is available at [llmSHAP Docs](https://filipnaudot.github.io/llmSH
 
 ---
 
-# Example usage
+# Example Usage
 
 ```python
 from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution
@@ -57,10 +57,10 @@ print("\n\n### HEATMAP ###")
 print(result.render())
 ```
 
-## Multimodal example with `Image`:
-The following example shows `llmSHAP` with images. Note: `EmbeddingCosineSimilarity` downloads an embedding model on first use.
+## Multimodal Example with `Image`:
+The following example shows `llmSHAP` with images.
 ```python
-from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution, EmbeddingCosineSimilarity, Image
+from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution, Image
 from llmSHAP.llm import OpenAIInterface
 
 data = {
@@ -77,7 +77,6 @@ result = ShapleyAttribution(model=OpenAIInterface("gpt-5-mini", reasoning="low")
                             prompt_codec=BasicPromptCodec(system="Answer the question briefly."),
                             use_cache=True,
                             num_threads=35,
-                            value_function=EmbeddingCosineSimilarity(),
                             ).attribution()
 
 print("\n\n### OUTPUT ###")
@@ -94,6 +93,44 @@ print(result.render(abs_values=True, render_labels=True))
     </picture>
 </div>
 
+
+
+## Embedding-Based Output Scoring
+
+`EmbeddingCosineSimilarity` measures semantic similarity between outputs using embeddings. 
+It supports two backends:
+- **API** — any OpenAI-compatible embeddings endpoint via `api_url_endpoint`.
+- **Local** — a `sentence-transformers` model downloaded on first use.
+
+For the local backend, install the `embeddings` extra:
+```bash
+pip install "llmshap[embeddings]"
+```
+
+The example below uses the API backend, which is already included in `[all]`.
+
+```python
+from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution, EmbeddingCosineSimilarity
+from llmSHAP.llm import OpenAIInterface
+
+data = "In what city is the Eiffel Tower?"
+handler = DataHandler(data)
+result = ShapleyAttribution(model=OpenAIInterface("gpt-4o-mini"),
+                            data_handler=handler,
+                            prompt_codec=BasicPromptCodec(system="Answer the question briefly."),
+                            use_cache=True,
+                            num_threads=16,
+                            value_function=EmbeddingCosineSimilarity(
+                                model_name = "text-embedding-3-small",
+                                api_url_endpoint = "https://api.openai.com/v1")
+                            ).attribution()
+
+print("\n\n### OUTPUT ###")
+print(result.output)
+
+print("\n\n### HEATMAP ###")
+print(result.render(abs_values=True, render_labels=True))
+```
 
 
 ---
