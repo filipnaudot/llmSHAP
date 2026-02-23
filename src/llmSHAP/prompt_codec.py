@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from llmSHAP.types import IndexSelection, Prompt, Any
+from llmSHAP.types import IndexSelection, Any
 
 from llmSHAP.data_handler import DataHandler
 from llmSHAP.generation import Generation
@@ -9,7 +9,7 @@ from llmSHAP.generation import Generation
 
 class PromptCodec(ABC):
     @abstractmethod
-    def build_prompt(self, data_handler: DataHandler, indexes: IndexSelection) -> Prompt:
+    def build_prompt(self, data_handler: DataHandler, indexes: IndexSelection) -> Any:
         """(Encode) Build prompt to send to the model."""
         raise NotImplementedError
 
@@ -35,7 +35,7 @@ class BasicPromptCodec(PromptCodec):
     def __init__(self, system: str = ""):
         self.system: str = system
     
-    def build_prompt(self, data_handler: DataHandler, indexes: IndexSelection) -> Prompt:
+    def build_prompt(self, data_handler: DataHandler, indexes: IndexSelection) -> Any:
         return [
             {"role": "system", "content": self.system},
             {"role": "user",   "content": data_handler.to_string(indexes)}

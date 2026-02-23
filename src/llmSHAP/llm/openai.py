@@ -1,6 +1,6 @@
 import gc, os, mimetypes
 
-from llmSHAP.types import Prompt, Optional, Any
+from llmSHAP.types import Optional, Any
 from llmSHAP.image import Image
 from llmSHAP.llm.llm_interface import LLMInterface
 
@@ -32,7 +32,7 @@ class OpenAIInterface(LLMInterface):
 
     def generate(
         self,
-        prompt: Prompt,
+        prompt: Any,
         tools: Optional[list[Any]] = None,
         images: Optional[list[Any]] = None,
     ) -> str:
@@ -47,7 +47,7 @@ class OpenAIInterface(LLMInterface):
         response = self.client.responses.create(**kwargs) # type: ignore[arg-type]
         return response.output_text or ""
 
-    def _attach_images(self, prompt: Prompt, images: list[Any]) -> Prompt:
+    def _attach_images(self, prompt: Any, images: list[Any]) -> Any:
         content_blocks: list[dict[str, Any]] = []
         for item in images:
             if isinstance(item, Image):
@@ -59,7 +59,7 @@ class OpenAIInterface(LLMInterface):
         
         if not content_blocks: return prompt
         
-        updated_prompt: Prompt = []
+        updated_prompt: Any = []
         attached = False
         for message in prompt:
             if not attached and message.get("role") == "user":

@@ -1,7 +1,7 @@
 from typing import Any, Optional, Callable
 import mimetypes
 
-from llmSHAP.types import Prompt, Type
+from llmSHAP.types import Type
 from llmSHAP.image import Image
 from llmSHAP.llm.llm_interface import LLMInterface
 
@@ -33,7 +33,7 @@ class LangChainInterface(LLMInterface):
 
     def generate(
         self,
-        prompt: Prompt,
+        prompt: Any,
         tools: Optional[list[Any]] = None,
         images: Optional[list[Any]] = None,
     ) -> str:
@@ -59,7 +59,7 @@ class LangChainInterface(LLMInterface):
                 return getattr(last, "content", str(last)) or ""
         return getattr(result, "content", str(result)) or ""
     
-    def _prompt_to_messages(self, prompt: Prompt, images: Optional[list[Any]] = None):
+    def _prompt_to_messages(self, prompt: Any, images: Optional[list[Any]] = None):
         role_map: dict[str, Type[BaseMessage]] = {
             "system": SystemMessage,
             "user": HumanMessage,
