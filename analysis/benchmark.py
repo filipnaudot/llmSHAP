@@ -1,5 +1,4 @@
 # type: ignore
-import csv
 import math
 from statistics import mean
 import matplotlib.pyplot as plt
@@ -9,26 +8,13 @@ import json
 from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution, EmbeddingCosineSimilarity
 from llmSHAP.llm import OpenAIInterface
 from llmSHAP.attribution_methods import CounterfactualSampler, SlidingWindowSampler, FullEnumerationSampler
+from data import SymptomDataset
 
 
-def _load_data(file_name):
-    data = []
-    with open(file_name, newline='', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            disease = row["Disease"].strip()
-            symptoms = [
-                f"\nSYMPTOM: {value.strip().replace('_', ' ')}" for key, value in row.items()
-                if key.startswith("Symptom_") and value and value.strip()
-            ]
-            data.append({"Disease": disease, "Symptoms": symptoms})
-    return data
-
-
-def _build_data_handler(data):
+def _build_data_handler(data: SymptomDataset):
     prompt_dict = {"initial_query": "A patient is showing the following symptom(s):"}
-    for i, symptom in enumerate(data["Symptoms"], start=1):
-        prompt_dict[f"symptom_{i}"] = symptom
+    for index, concept in enumerate(data.concepts(), start=1):
+        prompt_dict[f"symptom_{index}"] = f"\nSYMPTOM: {concept}"
     prompt_dict["end_query"] = (
         "\nBased on these symptom(s), what disease or condition do you think they most likely have?"
         "\nANSWER BRIEFLY."
@@ -222,7 +208,7 @@ if __name__ == "__main__":
 
     prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
     llm = OpenAIInterface("gpt-4.1-mini", temperature=0.2, max_tokens=64)
-    data = _load_data("reduced_symptom_dataset.csv")
+    data = SymptomDataset.load()
     
 
     timing_results = {
@@ -239,8 +225,6 @@ if __name__ == "__main__":
     }
     for i, entry in enumerate(data):
         handler = _build_data_handler(entry)
-        
-        # Init all samplers
         players = handler.get_keys(exclude_permanent_keys=True)
         samplers = [
             # name                          sampler                                  use_cache
@@ -250,7 +234,6 @@ if __name__ == "__main__":
             ("Shapley value",               FullEnumerationSampler(len(players)),    False) # Gold standard
         ]
 
-        # For each sampler, run attribution
         for name, sampler, cache in samplers:
             shap = ShapleyAttribution(model=llm,
                                     data_handler=handler,
