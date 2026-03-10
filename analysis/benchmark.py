@@ -1,94 +1,35 @@
-# type: ignore
-import math
-from statistics import mean
-import matplotlib.pyplot as plt
-import time
 import json
+import time
+from statistics import mean
+
+import matplotlib.pyplot as plt
 
 from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution, EmbeddingCosineSimilarity
 from llmSHAP.llm import OpenAIInterface
 from llmSHAP.attribution_methods import CounterfactualSampler, SlidingWindowSampler, FullEnumerationSampler
+from comparison import AttributionComparator
 from data import SymptomDataset
+
+NUM_THREADS = 3
+COUNTERFACTUAL_METHOD_NAME = "Counterfactual"
+SLIDING_WINDOW_METHOD_NAME = "Sliding window (w=3)"; SLIDING_WINDOW_METHOD_SIZE = 3
+SHAPLEY_CACHE_METHOD_NAME = "Shapley value - Cache"
+SHAPLEY_METHOD_NAME = "Shapley value"
+METHOD_NAMES = (
+    COUNTERFACTUAL_METHOD_NAME,
+    SLIDING_WINDOW_METHOD_NAME,
+    SHAPLEY_CACHE_METHOD_NAME,
+    SHAPLEY_METHOD_NAME,
+)
 
 
 def _build_data_handler(data: SymptomDataset):
     prompt_dict = {"initial_query": "A patient is showing the following symptom(s):"}
     for index, concept in enumerate(data.concepts(), start=1):
         prompt_dict[f"symptom_{index}"] = f"\nSYMPTOM: {concept}"
-    prompt_dict["end_query"] = (
-        "\nBased on these symptom(s), what disease or condition do you think they most likely have?"
-        "\nANSWER BRIEFLY."
-    )
+    prompt_dict["end_query"] = ("\nBased on these symptom(s), what disease or condition do you think they most likely have?"
+                                "\nANSWER BRIEFLY.")
     return DataHandler(prompt_dict, permanent_keys={"initial_query", "end_query"})
-
-
-
-def _compare_attributions_to_gold(attribution_data, gold_function_name="Shapley value"):
-    gold_entries = attribution_data[gold_function_name]
-    number_of_datapoints = len(gold_entries)
-
-    def extract_score_vector(attribution_mapping, ordered_feature_keys):
-        score_vector = []
-        for feature_key in ordered_feature_keys:
-            feature_record = attribution_mapping.get(feature_key, {})
-            if isinstance(feature_record, dict):
-                score_vector.append(float(feature_record.get("score", 0.0)))
-            else:
-                try:
-                    score_vector.append(float(feature_record))
-                except Exception:
-                    score_vector.append(0.0)
-        return score_vector
-
-    def cosine_similarity(vector_a, vector_b):
-        dot_product = sum(a * b for a, b in zip(vector_a, vector_b))
-        magnitude_a = math.sqrt(sum(a * a for a in vector_a))
-        magnitude_b = math.sqrt(sum(b * b for b in vector_b))
-        return 0.0 if magnitude_a == 0.0 or magnitude_b == 0.0 else dot_product / (magnitude_a * magnitude_b)
-
-    ordered_feature_keys_per_datapoint = [
-        list(gold_entries[i]["attribution"].keys()) for i in range(number_of_datapoints)
-    ]
-    gold_score_vectors = [
-        extract_score_vector(gold_entries[i]["attribution"], ordered_feature_keys_per_datapoint[i])
-        for i in range(number_of_datapoints)
-    ]
-    feature_counts_per_datapoint = [gold_entries[i]["feature_count"] for i in range(number_of_datapoints)]
-
-    similarity_results_by_function = {}
-    for method_name, method_entries in attribution_data.items():
-        if method_name == gold_function_name:
-            continue
-
-        per_datapoint_similarities = []
-        similarities_grouped_by_feature_count = {}  # {feature_count: [similarities]}
-
-        for datapoint_index in range(number_of_datapoints):
-            method_score_vector = extract_score_vector(
-                method_entries[datapoint_index]["attribution"],
-                ordered_feature_keys_per_datapoint[datapoint_index],
-            )
-            similarity_value = cosine_similarity(
-                gold_score_vectors[datapoint_index],
-                method_score_vector
-            )
-            per_datapoint_similarities.append(similarity_value)
-
-            feature_count = feature_counts_per_datapoint[datapoint_index]
-            similarities_grouped_by_feature_count.setdefault(feature_count, []).append(similarity_value)
-
-        average_similarity_by_feature_count = {
-            feature_count: mean(similarities)
-            for feature_count, similarities in similarities_grouped_by_feature_count.items()
-        }
-
-        similarity_results_by_function[method_name] = {
-            "per_datapoint": per_datapoint_similarities,
-            "mean_similarity": mean(per_datapoint_similarities) if per_datapoint_similarities else None,
-            "by_feature_count": average_similarity_by_feature_count,
-        }
-
-    return similarity_results_by_function
 
 
 def _calculate_efficiency(attribution_result):
@@ -166,16 +107,8 @@ def _plot_similarity_convergence(similarities):
 
         # The "final" target is the running mean after all datapoints
         final_mean_similarity = running_mean_values[-1]
-        absolute_differences_to_final = [
-            abs(running_mean - final_mean_similarity) for running_mean in running_mean_values[:-1]
-        ]
-
-        plt.plot(
-            range(1, len(absolute_differences_to_final) + 1),
-            absolute_differences_to_final,
-            marker="o",
-            label=method_name,
-        )
+        absolute_differences_to_final = [abs(running_mean - final_mean_similarity) for running_mean in running_mean_values[:-1]]
+        plt.plot(range(1, len(absolute_differences_to_final) + 1), absolute_differences_to_final, marker="o", label=method_name,)
 
     plt.xlabel("Number of Data Points")
     plt.ylabel("Running mean and Final mean Diff")
@@ -195,74 +128,63 @@ def _log(i, similarities, timing_results, attribution_results=None):
     with open("log.jsonl", "w", encoding="utf-8") as f:
         f.write(json.dumps(entry, default=str) + "\n")
     if attribution_results:
-        attribution_results_entry = {
-            "attribution_results": attribution_results,
-        }
+        attribution_results_entry = {"attribution_results": attribution_results,}
         with open("full_attribution_log.jsonl", "w", encoding="utf-8") as f:
             f.write(json.dumps(attribution_results_entry, default=str) + "\n")
 
 
 
 if __name__ == "__main__":
-    VERBOSE = False
+    DEBUG = False
+    VERBOSE = True
 
     prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
     llm = OpenAIInterface("gpt-4.1-mini", temperature=0.2, max_tokens=64)
     data = SymptomDataset.load()
     
-
-    timing_results = {
-        "Counterfactual": [],
-        "Sliding window (w=3)": [],
-        "Shapley value - Cache": [],
-        "Shapley value": [],
-    }
-    attribution_results = {
-        "Counterfactual": [],
-        "Sliding window (w=3)": [],
-        "Shapley value - Cache": [],
-        "Shapley value": [],
-    }
+    timing_results = {method_name: [] for method_name in METHOD_NAMES}
+    attribution_results = {method_name: [] for method_name in METHOD_NAMES}
     for i, entry in enumerate(data):
         handler = _build_data_handler(entry)
         players = handler.get_keys(exclude_permanent_keys=True)
+        if VERBOSE: print(f"\n\nFeatures: {len(players)}")
         samplers = [
-            # name                          sampler                                  use_cache
-            ("Counterfactual",              CounterfactualSampler(),                 False),
-            ("Sliding window (w=3)",        SlidingWindowSampler(players, w_size=3), False),
-            ("Shapley value - Cache",       FullEnumerationSampler(len(players)),    True),
-            ("Shapley value",               FullEnumerationSampler(len(players)),    False) # Gold standard
+            (COUNTERFACTUAL_METHOD_NAME, CounterfactualSampler(), False),
+            (SLIDING_WINDOW_METHOD_NAME, SlidingWindowSampler(players, w_size=SLIDING_WINDOW_METHOD_SIZE), False),
+            (SHAPLEY_CACHE_METHOD_NAME, FullEnumerationSampler(len(players)), True),
+            (SHAPLEY_METHOD_NAME, FullEnumerationSampler(len(players)), False),
         ]
 
         for name, sampler, cache in samplers:
+            if VERBOSE: print(f"Method: {name}", end="\n     ")
             shap = ShapleyAttribution(model=llm,
-                                    data_handler=handler,
-                                    prompt_codec=prompt_codec,
-                                    sampler=sampler,
-                                    use_cache=cache,
-                                    num_threads=3,
-                                    value_function=EmbeddingCosineSimilarity())
+                                      data_handler=handler,
+                                      prompt_codec=prompt_codec,
+                                      sampler=sampler,
+                                      use_cache=cache,
+                                      verbose=False,
+                                      num_threads=NUM_THREADS,
+                                      value_function=EmbeddingCosineSimilarity())
             
             start_time = time.perf_counter() # Start clock
             result = shap.attribution()
             elapsed = time.perf_counter() - start_time # Stop clock
 
-            if VERBOSE:
+            if VERBOSE: print(f"Time: {elapsed}")
+            if DEBUG:
                 print("\n\n### OUTPUT ###")
                 print(result.output)
                 print("\n\n### ATTRIBUTION ###")
                 print(result.attribution)
 
             efficiency = _calculate_efficiency(result)
-            attribution_results[name].append({
-                "attribution": result.attribution,
-                "feature_count": len(players),
-                "efficiency": efficiency,
-            })
+            attribution_results[name].append({"attribution": result.attribution,
+                                              "feature_count": len(players),
+                                              "efficiency": efficiency,})
             timing_results[name].append({"num_features": len(players), "time": elapsed})
 
 
-        similarities = _compare_attributions_to_gold(attribution_results)
+        similarities = AttributionComparator(gold_method_name=SHAPLEY_METHOD_NAME).compare(attribution_results)
         _plot_similarities(similarities)
         _plot_similarity_convergence(similarities)
         _plot_timing(timing_results)
