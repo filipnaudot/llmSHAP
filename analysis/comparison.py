@@ -55,8 +55,7 @@ class AttributionComparator:
 
         similarity_results_by_function = {}
         for method_name, method_entries in attribution_data.items():
-            if method_name == self.gold_method_name:
-                continue
+            if method_name == self.gold_method_name: continue
 
             per_datapoint_similarities = []
             similarities_grouped_by_feature_count = {}
