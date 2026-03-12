@@ -1,4 +1,4 @@
 from .base import DataClass
-from .symptom import SymptomDataset
+from .symptom_to_diagnosis.symptom import SymptomDataset
 
 __all__ = ["DataClass", "SymptomDataset"]

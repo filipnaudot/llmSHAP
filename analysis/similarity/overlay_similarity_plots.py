@@ -1,11 +1,14 @@
 import json
-import math
-from statistics import mean
 import argparse
+import sys
+from pathlib import Path
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-
-GOLD_METHOD = "Shapley value"
+from utils import AttributionComparator
 
 
 def load_full_attr(path):
@@ -13,71 +16,6 @@ def load_full_attr(path):
         line = f.read().strip()
     obj = json.loads(line)
     return obj["attribution_results"]
-
-
-def extract_score_vector(attr_mapping, ordered_keys):
-    vec = []
-    for k in ordered_keys:
-        v = attr_mapping.get(k, {})
-        if isinstance(v, dict):
-            vec.append(float(v.get("score", 0.0)))
-        else:
-            try:
-                vec.append(float(v))
-            except Exception:
-                vec.append(0.0)
-    return vec
-
-
-def cosine_similarity(a, b):
-    dot = sum(x * y for x, y in zip(a, b))
-    ma = math.sqrt(sum(x * x for x in a))
-    mb = math.sqrt(sum(x * x for x in b))
-    if ma == 0.0 or mb == 0.0:
-        return 0.0
-    return dot / (ma * mb)
-
-
-def compare_to_gold(attribution_data, gold_name=GOLD_METHOD):
-    gold_entries = attribution_data[gold_name]
-    n = len(gold_entries)
-
-    ordered_feature_keys_per_dp = [
-        list(gold_entries[i]["attribution"].keys()) for i in range(n)
-    ]
-    gold_score_vectors = [
-        extract_score_vector(gold_entries[i]["attribution"], ordered_feature_keys_per_dp[i])
-        for i in range(n)
-    ]
-    feature_counts_per_dp = [gold_entries[i]["feature_count"] for i in range(n)]
-
-    results = {}
-    for method_name, method_entries in attribution_data.items():
-        if method_name == gold_name:
-            continue
-
-        per_dp_sims = []
-        grouped = {}  # feature_count -> list[sim]
-
-        for i in range(n):
-            method_vec = extract_score_vector(
-                method_entries[i]["attribution"],
-                ordered_feature_keys_per_dp[i],
-            )
-            sim = cosine_similarity(gold_score_vectors[i], method_vec)
-            per_dp_sims.append(sim)
-
-            fc = feature_counts_per_dp[i]
-            grouped.setdefault(fc, []).append(sim)
-
-        by_fc = {fc: mean(vals) for fc, vals in grouped.items()}
-        results[method_name] = {
-            "per_datapoint": per_dp_sims,
-            "mean_similarity": mean(per_dp_sims) if per_dp_sims else None,
-            "by_feature_count": by_fc,
-        }
-
-    return results
 
 def plot_overlay(sim_nondet, sim_det, out_path):
     method_names = list(sim_nondet.keys())
@@ -137,8 +75,9 @@ def main():
     attr_non_det = load_full_attr(args.non_deterministic_file)
     attr_det = load_full_attr(args.deterministic_file)
 
-    sim_non_det = compare_to_gold(attr_non_det)
-    sim_det = compare_to_gold(attr_det)
+    comparator = AttributionComparator()
+    sim_non_det = comparator.compare(attr_non_det)
+    sim_det = comparator.compare(attr_det)
 
     plot_overlay(sim_non_det, sim_det, args.output)
     print(f"wrote {args.output}")

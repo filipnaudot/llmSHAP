@@ -1,7 +1,7 @@
 import csv
 from pathlib import Path
 
-from .base import DataClass
+from ..base import DataClass
 
 
 class SymptomDataset(DataClass):
@@ -11,11 +11,6 @@ class SymptomDataset(DataClass):
 
     def concepts(self) -> list[str]:
         return self.symptom_list
-
-    def __call__(self, concept_index: int | None = None) -> str | list[str]:
-        if concept_index is None:
-            return self.concepts()
-        return self.symptom_list[concept_index]
 
     @classmethod
     def load(cls, file_path: str = "reduced_symptom_dataset.csv") -> list["SymptomDataset"]:

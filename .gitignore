@@ -4,6 +4,7 @@ playground.py
 .vscode
 *.png
 *.jsonl
+*logs
 
 
 # Logs
