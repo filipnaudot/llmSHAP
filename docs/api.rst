@@ -16,6 +16,18 @@ Prompt Codecs
    :undoc-members:
    :show-inheritance:
 
+LLM Interfaces
+--------------
+.. automodule:: llmSHAP.llm.llm_interface
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: llmSHAP.llm.openai
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Generations
 -----------
 .. automodule:: llmSHAP.generation
@@ -43,18 +55,6 @@ Attribution Methods
    :show-inheritance:
 
 .. automodule:: llmSHAP.attribution_methods.shapley_attribution
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-LLM Interfaces
---------------
-.. automodule:: llmSHAP.llm.llm_interface
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: llmSHAP.llm.openai
    :members:
    :undoc-members:
    :show-inheritance:

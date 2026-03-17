@@ -72,8 +72,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
-    # llm = OpenAIInterface("gpt-4.1-mini", temperature=0.2, max_tokens=64)
-    llm = OpenAIInterface("gpt-4.1-mini", temperature=0.0, seed=42, max_tokens=64)
+    # llm = OpenAIInterface(model_name="gpt-4.1-mini", temperature=0.2, max_tokens=64)
+    llm = OpenAIInterface(model_name="gpt-4.1-mini", temperature=0.0, seed=42, max_tokens=64)
     data = SymptomDataset.load()
 
     checkpoint = _load_checkpoint() if args.start_from_checkpoint else None

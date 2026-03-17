@@ -40,7 +40,7 @@ from llmSHAP.llm import OpenAIInterface
 
 data = "In what city is the Eiffel Tower?"
 handler = DataHandler(data, permanent_keys={0,3,4})
-result = ShapleyAttribution(model=OpenAIInterface("gpt-4o-mini"),
+result = ShapleyAttribution(model=OpenAIInterface(model_name="gpt-4o-mini"),
                             data_handler=handler,
                             prompt_codec=BasicPromptCodec(system="Answer the question briefly."),
                             use_cache=True,
@@ -72,7 +72,7 @@ data = {
     "Num countries"        : "It has offices in three countries."
 }
 
-result = ShapleyAttribution(model=OpenAIInterface("gpt-5-mini", reasoning="low"),
+result = ShapleyAttribution(model=OpenAIInterface(model_name="gpt-5-mini", reasoning="low"),
                             data_handler=DataHandler(data, permanent_keys={"question"}),
                             prompt_codec=BasicPromptCodec(system="Answer the question briefly."),
                             use_cache=True,
@@ -115,7 +115,7 @@ from llmSHAP.llm import OpenAIInterface
 
 data = "In what city is the Eiffel Tower?"
 handler = DataHandler(data)
-result = ShapleyAttribution(model=OpenAIInterface("gpt-4o-mini"),
+result = ShapleyAttribution(model=OpenAIInterface(model_name="gpt-4o-mini"),
                             data_handler=handler,
                             prompt_codec=BasicPromptCodec(system="Answer the question briefly."),
                             use_cache=True,

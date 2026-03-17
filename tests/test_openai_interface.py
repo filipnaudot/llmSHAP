@@ -8,7 +8,7 @@ def fake_key(monkeypatch):
 
 @pytest.fixture
 def llm() -> OpenAIInterface:
-    return OpenAIInterface("gpt-4o-mini")
+    return OpenAIInterface(model_name="gpt-4o-mini")
 
 def test_generate(llm):
     pytest.skip("TODO")
