@@ -13,8 +13,7 @@ from utils import AttributionComparator
 
 def load_full_attr(path):
     with open(path, "r", encoding="utf-8") as f:
-        line = f.read().strip()
-    obj = json.loads(line)
+        obj = json.load(f)
     return obj["attribution_results"]
 
 def plot_overlay(sim_nondet, sim_det, out_path):
@@ -67,8 +66,8 @@ def main():
     parser = argparse.ArgumentParser(
         description="Overlay similarity-per-feature-count plots from two attribution runs."
     )
-    parser.add_argument("non_deterministic_file", help="full_attribution_log.jsonl (non-det)")
-    parser.add_argument("deterministic_file", help="full_attribution_log.jsonl (det)")
+    parser.add_argument("--non-deterministic-file", help="checkpoint.json (non-det)")
+    parser.add_argument("--deterministic-file", help="checkpoint.json (det)")
     parser.add_argument("-o", "--output", default="similarities_by_feature_count_overlay.png",help="Output PNG path")
     args = parser.parse_args()
 

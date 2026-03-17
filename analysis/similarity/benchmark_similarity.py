@@ -1,3 +1,4 @@
+import argparse
 import json
 import sys
 import time
@@ -10,8 +11,6 @@ from llmSHAP.attribution_methods import CounterfactualSampler, SlidingWindowSamp
 from data import SymptomDataset
 from utils import AttributionComparator, plot_similarities, plot_similarity_convergence, plot_timing
 
-NUM_THREADS = 10
-
 COUNTERFACTUAL_METHOD_NAME = "Counterfactual"
 SLIDING_WINDOW_METHOD_SIZE = 3; SLIDING_WINDOW_METHOD_NAME = f"Sliding window (w={SLIDING_WINDOW_METHOD_SIZE})"
 SHAPLEY_CACHE_METHOD_NAME = "Shapley value - Cache"
@@ -23,9 +22,8 @@ METHOD_NAMES = (
     SHAPLEY_METHOD_NAME,
 )
 
-LOGS_DIRECTORY = Path(__file__).resolve().parent / "logs"
-SUMMARY_LOG_PATH = LOGS_DIRECTORY / "log.jsonl"
-FULL_ATTRIBUTION_LOG_PATH = LOGS_DIRECTORY / "full_attribution_log.jsonl"
+CHECKPOINTS_DIRECTORY = Path(__file__).resolve().parent / "checkpoints"
+CHECKPOINT_PATH = CHECKPOINTS_DIRECTORY / "checkpoint.json"
 
 
 def _build_data_handler(data: SymptomDataset):
@@ -42,19 +40,20 @@ def _calculate_efficiency(attribution_result):
     return (attribution_result.grand_coalition_value / attribution_total) * 100
     
 
-def _write_logs(i, similarities, timing_results, attribution_results=None):
-    LOGS_DIRECTORY.mkdir(exist_ok=True)
+def _write_checkpoint(data_index, timing_results, attribution_results):
+    CHECKPOINTS_DIRECTORY.mkdir(exist_ok=True)
     entry = {
-        "data_index": i,
-        "similarities": similarities,
+        "data_index": data_index,
         "timing": timing_results,
+        "attribution_results": attribution_results,
     }
-    with SUMMARY_LOG_PATH.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(entry, default=str) + "\n")
-    if attribution_results:
-        attribution_results_entry = {"attribution_results": attribution_results}
-        with FULL_ATTRIBUTION_LOG_PATH.open("w", encoding="utf-8") as f:
-            json.dump(attribution_results_entry, f, default=str)
+    with CHECKPOINT_PATH.open("w", encoding="utf-8") as f:
+        json.dump(entry, f, default=str)
+
+
+def _load_checkpoint():
+    if not CHECKPOINT_PATH.exists(): return None
+    with CHECKPOINT_PATH.open(encoding="utf-8") as f: return json.load(f)
 
 
 def create_samplers(players):
@@ -67,14 +66,27 @@ def create_samplers(players):
 if __name__ == "__main__":
     DEBUG = False
     VERBOSE = True
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--start-from-checkpoint", action="store_true")
+    parser.add_argument("--threads", type=int, default=10)
+    args = parser.parse_args()
 
     prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
-    llm = OpenAIInterface("gpt-4.1-mini", temperature=0.2, max_tokens=64)
+    # llm = OpenAIInterface("gpt-4.1-mini", temperature=0.2, max_tokens=64)
+    llm = OpenAIInterface("gpt-4.1-mini", temperature=0.0, seed=42, max_tokens=64)
     data = SymptomDataset.load()
-    
-    timing_results = {method_name: [] for method_name in METHOD_NAMES}
-    attribution_results = {method_name: [] for method_name in METHOD_NAMES}
-    for i, entry in enumerate(data):
+
+    checkpoint = _load_checkpoint() if args.start_from_checkpoint else None
+    if checkpoint is None:
+        timing_results = {method_name: [] for method_name in METHOD_NAMES}
+        attribution_results = {method_name: [] for method_name in METHOD_NAMES}
+        start_index = 0
+    else:
+        timing_results = checkpoint["timing"]
+        attribution_results = checkpoint["attribution_results"]
+        start_index = checkpoint["data_index"] + 1
+
+    for data_index, entry in enumerate(data[start_index:], start=start_index):
         handler = _build_data_handler(entry)
         players = handler.get_keys(exclude_permanent_keys=True)
         if VERBOSE: print(f"\n\nFeatures: {len(players)}")
@@ -87,7 +99,7 @@ if __name__ == "__main__":
                                       sampler=sampler,
                                       use_cache=cache,
                                       verbose=False,
-                                      num_threads=NUM_THREADS,
+                                      num_threads=args.threads,
                                     #   value_function=EmbeddingCosineSimilarity(model_name = "text-embedding-3-small", api_url_endpoint = "https://api.openai.com/v1")
                                       value_function=EmbeddingCosineSimilarity()
                                     )
@@ -110,4 +122,4 @@ if __name__ == "__main__":
         plot_similarities(similarities)
         plot_similarity_convergence(similarities)
         plot_timing(timing_results)
-        _write_logs(i, similarities, timing_results, attribution_results=attribution_results)
+        _write_checkpoint(data_index, timing_results, attribution_results)
