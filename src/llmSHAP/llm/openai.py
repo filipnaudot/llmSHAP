@@ -1,16 +1,45 @@
-import gc, os, mimetypes
+import mimetypes
+import os
+import random
+import time
 
 from llmSHAP.types import Optional, Any
 from llmSHAP.image import Image
 from llmSHAP.llm.llm_interface import LLMInterface
 
 class OpenAIInterface(LLMInterface):
+    """
+        OpenAI Responses API interface with llmSHAP-managed retry behavior.
+
+        Retries are handled entirely by llmSHAP. 
+        The underlying ``OpenAI`` client is
+        constructed with ``max_retries=0``, so the retry budget and backoff are controlled
+        by ``max_retries``, ``backoff_base``, and ``backoff_max`` on this interface.
+
+        Requests use an explicit default timeout of ``600.0`` seconds (10 minutes) rather
+        than inheriting the OpenAI SDK's default timeout.
+
+        :param model_name: OpenAI model identifier to use for generation.
+        :param temperature: Sampling temperature for supported models.
+        :param max_tokens: Maximum number of output tokens to request.
+        :param seed: Optional random seed forwarded to supported models.
+        :param reasoning: Optional reasoning effort for reasoning-capable models.
+        :param max_retries: Number of llmSHAP-managed retries after the initial request.
+        :param timeout: Request timeout in seconds passed to the underlying OpenAI client.
+        :param backoff_base: Base delay in seconds for exponential backoff.
+        :param backoff_max: Maximum backoff delay in seconds.
+    """
     def __init__(self,
+                 *,
                  model_name: str,
                  temperature: float = 0.0,
                  max_tokens: int = 512,
                  seed: Optional[int] = None,
-                 reasoning: Optional[str] = None,):
+                 reasoning: Optional[str] = None,
+                 max_retries: int = 5,
+                 timeout: float = 600.0,
+                 backoff_base: float = 1.0,
+                 backoff_max: float = 30.0,):
         try:
             from openai import OpenAI
             from dotenv import load_dotenv
@@ -23,29 +52,76 @@ class OpenAIInterface(LLMInterface):
         load_dotenv()
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key: raise RuntimeError("OPENAI_API_KEY is not set. Set it (e.g. in your .env) before using OpenAIInterface.")
-        self.client: OpenAI = OpenAI(api_key=api_key)
+        self.client: OpenAI = OpenAI(api_key=api_key, max_retries=2, timeout=timeout)
         self.model_name = model_name
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.seed = seed
-        self.reasoning = {"effort": reasoning}
+        self.reasoning = {"effort": reasoning} if reasoning is not None else None
+        self.max_retries = max_retries
+        self.backoff_base = backoff_base
+        self.backoff_max = backoff_max
 
-    def generate(
-        self,
-        prompt: Any,
-        tools: Optional[list[Any]] = None,
-        images: Optional[list[Any]] = None,
-    ) -> str:
+    def generate(self, prompt: Any, tools: Optional[list[Any]] = None, images: Optional[list[Any]] = None,) -> str:
+        from openai import APIConnectionError, APITimeoutError, InternalServerError, RateLimitError
         if images: prompt = self._attach_images(prompt, images)
-        kwargs = dict(
-            model=self.model_name,
-            input=prompt,
-            max_output_tokens=self.max_tokens,
-        )
+        kwargs = dict(model=self.model_name, input=prompt, max_output_tokens=self.max_tokens)
         if self.reasoning is not None: kwargs["reasoning"] = self.reasoning # type: ignore[arg-type]
         elif self.model_name in {"gpt-5.1", "gpt-5.2"}: kwargs["temperature"] = self.temperature # type: ignore[arg-type]
-        response = self.client.responses.create(**kwargs) # type: ignore[arg-type]
-        return response.output_text or ""
+        for attempt in range(self.max_retries + 1):
+            try:
+                response = self.client.responses.create(**kwargs) # type: ignore[arg-type]
+                return response.output_text or ""
+            except RateLimitError as exc:
+                if self._is_quota_exhausted(exc):
+                    raise RuntimeError(self._format_error(
+                        "OpenAI quota exhausted", attempt=attempt, detail=self._extract_error_message(exc),)) from exc
+                if attempt >= self.max_retries:
+                    raise RuntimeError(self._format_error(
+                        "OpenAI rate limit exceeded after retries", attempt=attempt, detail=self._extract_error_message(exc),)) from exc
+                time.sleep(self._backoff_seconds(attempt))
+            except (APIConnectionError, APITimeoutError, InternalServerError) as exc:
+                if attempt >= self.max_retries:
+                    raise RuntimeError(self._format_error(
+                        "OpenAI request failed after retries", attempt=attempt, detail=self._extract_error_message(exc),)) from exc
+                time.sleep(self._backoff_seconds(attempt))
+        raise RuntimeError(self._format_error("OpenAI request failed", attempt=self.max_retries))
+
+
+    def _backoff_seconds(self, attempt: int) -> float:
+        base_delay = min(self.backoff_max, self.backoff_base * (2 ** attempt))
+        return base_delay * (0.5 + random.random())
+
+
+    def _is_quota_exhausted(self, exc: Exception) -> bool:
+        body = getattr(exc, "body", None)
+        if isinstance(body, dict):
+            error = body.get("error")
+            if isinstance(error, dict):
+                code = error.get("code")
+                error_type = error.get("type")
+                if code == "insufficient_quota" or error_type == "insufficient_quota":
+                    return True
+        code = getattr(exc, "code", None)
+        return code == "insufficient_quota"
+
+
+    def _extract_error_message(self, exc: Exception) -> str:
+        body = getattr(exc, "body", None)
+        if isinstance(body, dict):
+            error = body.get("error")
+            if isinstance(error, dict):
+                message = error.get("message")
+                if isinstance(message, str) and message:
+                    return message
+        return str(exc)
+
+
+    def _format_error(self, message: str, attempt: int, detail: Optional[str] = None) -> str:
+        attempts = attempt + 1
+        if detail: return f"{message} for model '{self.model_name}' after {attempts} attempt(s): {detail}"
+        return f"{message} for model '{self.model_name}' after {attempts} attempt(s)."
+
 
     def _attach_images(self, prompt: Any, images: list[Any]) -> Any:
         content_blocks: list[dict[str, Any]] = []
@@ -58,7 +134,6 @@ class OpenAIInterface(LLMInterface):
                     content_blocks.append({"type": "input_image", "image_url": item.data_url(mime)})
         
         if not content_blocks: return prompt
-        
         updated_prompt: Any = []
         attached = False
         for message in prompt:

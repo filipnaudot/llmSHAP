@@ -104,30 +104,29 @@ class EmbeddingCosineSimilarity(ValueFunction):
     Embedding-based cosine similarity between two generations.
 
     This value function supports two backends:
-    1. Local sentence-transformers model (default).
+
+    1. Local ``sentence-transformers`` model (default).
     2. OpenAI-compatible embeddings API when ``api_url_endpoint`` is provided.
 
     Parameters
     ----------
     model_name:
-        Embedding model identifier.
-        - Local mode default: ``sentence-transformers/all-MiniLM-L6-v2``.
-        - API mode: if left as the local default, it is automatically mapped to
-          ``text-embedding-3-small``.
+        Embedding model identifier. Defaults to
+        ``sentence-transformers/all-MiniLM-L6-v2`` in local mode. In API mode,
+        if this argument is omitted or left at the local default, it is mapped
+        automatically to ``text-embedding-3-small``.
     api_url_endpoint:
-        Optional base URL for an OpenAI-compatible API endpoint
-        (for example ``https://api.openai.com/v1`` or a self-hosted proxy).
-        When set, local sentence-transformers are not initialized.
-
-    Environment
-    -----------
-    OPENAI_API_KEY:
-        Required only when ``api_url_endpoint`` is provided.
+        Optional base URL for an OpenAI-compatible embeddings API endpoint,
+        for example ``https://api.openai.com/v1`` or a self-hosted proxy. When
+        set, local ``sentence-transformers`` are not initialized. Requires
+        ``OPENAI_API_KEY`` when provided.
 
     Notes
     -----
     - Returns ``0.0`` if either compared output is empty/whitespace.
     - Uses an internal LRU cache to avoid recomputing repeated pairs.
+    - Local mode loads the sentence-transformers model lazily and shares it
+      across instances.
     """
     DEFAULT_LOCAL_EMBEDDING_MODEL: ClassVar[str] = "sentence-transformers/all-MiniLM-L6-v2"
     DEFAULT_API_EMBEDDING_MODEL: ClassVar[str] = "text-embedding-3-small"

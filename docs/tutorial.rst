@@ -76,7 +76,7 @@ Finally, we create the LLM interface, which will allow us to interact with an LL
 
 .. code-block:: python
 
-   llm = OpenAIInterface("gpt-4o-mini")
+   llm = OpenAIInterface(model_name="gpt-4o-mini")
 
 We are now ready to compute the attribution score for each token in the string (except for "In", "is", and "the" since they are **permanent**).
 
@@ -95,7 +95,7 @@ The full code should now look like this:
    data = "In what city is the Eiffel Tower?"
    handler = DataHandler(data, permanent_keys={0,3,4})
    prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
-   llm = OpenAIInterface("gpt-4o-mini")
+   llm = OpenAIInterface(model_name="gpt-4o-mini")
 
    shap = ShapleyAttribution(model=llm, data_handler=handler, prompt_codec=prompt_codec, use_cache=True)
    result = shap.attribution()
@@ -130,7 +130,7 @@ The example below runs Shapley attribution on a 7-feature input string with
    data = "In what city is the Eiffel Tower?"
    handler = DataHandler(data, permanent_keys=None)
    prompt_codec = BasicPromptCodec(system="Answer the question briefly.")
-   llm = OpenAIInterface("gpt-4o-mini")
+   llm = OpenAIInterface(model_name="gpt-4o-mini")
 
    times = []
    threads = list(range(1, 11))
