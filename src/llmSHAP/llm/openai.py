@@ -13,16 +13,15 @@ class OpenAIInterface(LLMInterface):
 
         Retries are handled entirely by llmSHAP. 
         The underlying ``OpenAI`` client is
-        constructed with ``max_retries=0``, so the retry budget and backoff are controlled
+        constructed with ``max_retries=1``, otherwise the retry budget and backoff are controlled
         by ``max_retries``, ``backoff_base``, and ``backoff_max`` on this interface.
 
         Requests use an explicit default timeout of ``600.0`` seconds (10 minutes) rather
         than inheriting the OpenAI SDK's default timeout.
 
         :param model_name: OpenAI model identifier to use for generation.
-        :param temperature: Sampling temperature for supported models.
+        :param temperature: Sampling temperature for Responses API requests.
         :param max_tokens: Maximum number of output tokens to request.
-        :param seed: Optional random seed forwarded to supported models.
         :param reasoning: Optional reasoning effort for reasoning-capable models.
         :param max_retries: Number of llmSHAP-managed retries after the initial request.
         :param timeout: Request timeout in seconds passed to the underlying OpenAI client.
@@ -34,7 +33,6 @@ class OpenAIInterface(LLMInterface):
                  model_name: str,
                  temperature: float = 0.0,
                  max_tokens: int = 512,
-                 seed: Optional[int] = None,
                  reasoning: Optional[str] = None,
                  max_retries: int = 5,
                  timeout: float = 600.0,
@@ -52,22 +50,32 @@ class OpenAIInterface(LLMInterface):
         load_dotenv()
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key: raise RuntimeError("OPENAI_API_KEY is not set. Set it (e.g. in your .env) before using OpenAIInterface.")
-        self.client: OpenAI = OpenAI(api_key=api_key, max_retries=2, timeout=timeout)
+        self.client: OpenAI = OpenAI(api_key=api_key, max_retries=1, timeout=timeout)
         self.model_name = model_name
         self.temperature = temperature
         self.max_tokens = max_tokens
-        self.seed = seed
         self.reasoning = {"effort": reasoning} if reasoning is not None else None
         self.max_retries = max_retries
         self.backoff_base = backoff_base
         self.backoff_max = backoff_max
 
+
     def generate(self, prompt: Any, tools: Optional[list[Any]] = None, images: Optional[list[Any]] = None,) -> str:
-        from openai import APIConnectionError, APITimeoutError, InternalServerError, RateLimitError
         if images: prompt = self._attach_images(prompt, images)
-        kwargs = dict(model=self.model_name, input=prompt, max_output_tokens=self.max_tokens)
-        if self.reasoning is not None: kwargs["reasoning"] = self.reasoning # type: ignore[arg-type]
-        elif self.model_name in {"gpt-5.1", "gpt-5.2"}: kwargs["temperature"] = self.temperature # type: ignore[arg-type]
+        kwargs = {
+            "model": self.model_name,
+            "input": prompt,
+            "max_output_tokens": self.max_tokens,
+        }
+        if self.reasoning is not None:
+            kwargs["reasoning"] = self.reasoning # type: ignore[assignment]
+        else:
+            kwargs["temperature"] = self.temperature
+        return self._generate_with_retries(kwargs)
+
+
+    def _generate_with_retries(self, kwargs: dict[str, Any]) -> str:
+        from openai import APIConnectionError, APITimeoutError, InternalServerError, RateLimitError
         for attempt in range(self.max_retries + 1):
             try:
                 response = self.client.responses.create(**kwargs) # type: ignore[arg-type]

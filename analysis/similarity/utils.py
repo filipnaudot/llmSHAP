@@ -138,7 +138,7 @@ def plot_timing(timing_results):
     for name, results in timing_results.items():
         grouped = {}
         for result in results:
-            grouped.setdefault(result["num_features"], []).append(result["time"])
+            grouped.setdefault(result["feature_count"], []).append(result["time"])
         num_features_list = sorted(grouped.keys())
         time_result_list = [mean(grouped[x]) for x in num_features_list]
         plt.plot(num_features_list, time_result_list, marker="o", label=name)
