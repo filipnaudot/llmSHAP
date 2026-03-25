@@ -17,7 +17,7 @@ python analysis/similarity/benchmark_similarity.py --verbose
 ## Structure
 
 - `benchmark_similarity.py`
-  Runs the benchmark and writes plots and a checkpoint.
+  Runs the benchmark and writes plots, a results summary, and checkpoints.
 
 - `overlay_similarity_plots.py`
   Compares two benchmark runs and writes an overlay plot.
@@ -30,6 +30,9 @@ python analysis/similarity/benchmark_similarity.py --verbose
 
 - `plots/`
   Stores plots written by `benchmark_similarity.py`.
+
+- `results/`
+  Stores `RESULTS.md` written by `benchmark_similarity.py`.
 
 
 

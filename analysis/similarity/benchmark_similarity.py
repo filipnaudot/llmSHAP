@@ -3,10 +3,11 @@ import json
 import sys
 import time
 from pathlib import Path
+from statistics import mean
 if __package__ in {None, ""}: sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution, EmbeddingCosineSimilarity
-from llmSHAP.llm import OpenAIInterface
+from llmSHAP.llm import OpenAIInterface, DummyLLM
 from llmSHAP.attribution_methods import CounterfactualSampler, SlidingWindowSampler, FullEnumerationSampler
 from data import SymptomDataset
 from utils import AttributionComparator, plot_similarities, plot_similarity_convergence, plot_timing
@@ -21,6 +22,8 @@ METHOD_NAMES = (COUNTERFACTUAL_METHOD_NAME, SLIDING_WINDOW_METHOD_NAME, SHAPLEY_
 
 CHECKPOINTS_DIRECTORY = Path(__file__).resolve().parent / "checkpoints"
 CHECKPOINT_PATH = CHECKPOINTS_DIRECTORY / "checkpoint.json"
+RESULTS_DIRECTORY = Path(__file__).resolve().parent / "results"
+RESULTS_PATH = RESULTS_DIRECTORY / "RESULTS.md"
 
 
 def _build_data_handler(data: SymptomDataset):
@@ -39,10 +42,7 @@ def _calculate_efficiency(attribution_result):
 
 def _write_checkpoint(data_index, results):
     CHECKPOINTS_DIRECTORY.mkdir(exist_ok=True)
-    entry = {
-        "data_index": data_index,
-        "results": results,
-    }
+    entry = {"data_index": data_index, "results": results}
     with CHECKPOINT_PATH.open("w", encoding="utf-8") as f:
         json.dump(entry, f, default=str)
 
@@ -71,6 +71,33 @@ def _load_checkpoint():
     return checkpoint
 
 
+def _write_results_markdown(results, model_name):
+    RESULTS_DIRECTORY.mkdir(exist_ok=True)
+    similarities = AttributionComparator(gold_method_name=SHAPLEY_METHOD_NAME).compare(results)
+    table_rows = []
+    for method_name in METHOD_NAMES:
+        method_results = results.get(method_name, [])
+        if not method_results:
+            similarity = "N/A"
+            average_time = "N/A"
+            average_efficiency = "N/A"
+        else:
+            similarity_value = 1.0 if method_name == SHAPLEY_METHOD_NAME else similarities.get(method_name, {}).get("mean_similarity")
+            similarity = "N/A" if similarity_value is None else f"{similarity_value:.4f}"
+            average_time = f"{mean(result['time'] for result in method_results):.4f}"
+            average_efficiency = f"{mean(result['efficiency'] for result in method_results):.2f}%"
+        table_rows.append(f"| {method_name} | {model_name} | {similarity} | {average_time} | {average_efficiency} |")
+    markdown = "\n".join([
+        "# Benchmark Results",
+        "",
+        "| Method | Model Name | Similarity to Gold Standard | Average Time (s) | Efficiency |",
+        "| --- | --- | ---: | ---: | ---: |",
+        *table_rows,
+        "",
+    ])
+    with RESULTS_PATH.open("w", encoding="utf-8") as f: f.write(markdown)
+
+
 def create_samplers(players):
     return [(COUNTERFACTUAL_METHOD_NAME, CounterfactualSampler(), False),
             (SLIDING_WINDOW_METHOD_NAME, SlidingWindowSampler(players, w_size=SLIDING_WINDOW_METHOD_SIZE), False),
@@ -89,6 +116,7 @@ if __name__ == "__main__":
 
     # llm = OpenAIInterface(model_name="gpt-4.1-mini", temperature=0.2, max_tokens=64)
     llm = OpenAIInterface(model_name="gpt-4.1-mini", temperature=0.0, max_tokens=64)
+    # llm = DummyLLM(model_name="model", random=True)
     data = SymptomDataset.load()
 
     checkpoint = _load_checkpoint() if args.start_from_checkpoint else None
@@ -113,7 +141,7 @@ if __name__ == "__main__":
                                       use_cache=cache,
                                       verbose=False,
                                       num_threads=args.threads,
-                                    #   value_function=EmbeddingCosineSimilarity(model_name = "text-embedding-3-small", api_url_endpoint = "https://api.openai.com/v1")
+                                    #   value_function=EmbeddingCosineSimilarity(model_name = "text-embedding-3-small", api_url_endpoint = "https://api.openai.com/v1"))
                                       value_function=EmbeddingCosineSimilarity())
             
             start_time = time.perf_counter() # Start clock
@@ -133,5 +161,6 @@ if __name__ == "__main__":
         similarities = AttributionComparator(gold_method_name=SHAPLEY_METHOD_NAME).compare(results)
         plot_similarities(similarities)
         plot_similarity_convergence(similarities)
-        plot_timing(results)
+        plot_timing(results, normalize=True)
         _write_checkpoint(data_index, results)
+        _write_results_markdown(results, llm.model_name)
