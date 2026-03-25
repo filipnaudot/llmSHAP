@@ -133,25 +133,30 @@ def plot_similarities(similarities):
         plt.close()
 
 
-def plot_timing(timing_results):
+def plot_timing(timing_results, normalize: bool = False):
     PLOTS_DIRECTORY.mkdir(exist_ok=True)
+    grouped_results = {}
     for name, results in timing_results.items():
         grouped = {}
         for result in results:
             grouped.setdefault(result["feature_count"], []).append(result["time"])
-        num_features_list = sorted(grouped.keys())
-        time_result_list = [mean(grouped[x]) for x in num_features_list]
-        plt.plot(num_features_list, time_result_list, marker="o", label=name)
+        grouped_results[name] = {feature_count: mean(times) for feature_count, times in grouped.items()}
+    num_features_list = sorted({feature_count for grouped in grouped_results.values() for feature_count in grouped})
+    baseline = max(value for grouped in grouped_results.values() for value in grouped.values()) if normalize else None
+    for name, grouped in grouped_results.items():
+        time_result_list = [grouped[x] / baseline for x in num_features_list if x in grouped] if normalize else [grouped[x] for x in num_features_list if x in grouped]
+        feature_counts = [x for x in num_features_list if x in grouped]
+        plt.plot(feature_counts, time_result_list, marker="o", label=name)
     plt.xlabel("Number of Features")
-    plt.ylabel("Average Time (s)")
-    plt.title("Attribution Runtime by Number of Features")
+    plt.ylabel("Average Time (Normalized )" if normalize else "Average Time (s)")
+    plt.title("Normalized Attribution Runtime by Number of Features" if normalize else "Attribution Runtime by Number of Features")
     plt.legend()
     plt.xticks(sorted(num_features_list))
     plt.tight_layout()
-    plt.savefig(PLOTS_DIRECTORY / "timing_chart.png")
+    plt.savefig(PLOTS_DIRECTORY / ("timing_chart_normalized.png" if normalize else "timing_chart.png"))
     plt.yscale("log")
-    plt.title("Attribution Runtime by Number of Features (Log Scale)")
-    plt.savefig(PLOTS_DIRECTORY / "timing_chart_log.png")
+    plt.title("Normalized Attribution Runtime by Number of Features (Log Scale)" if normalize else "Attribution Runtime by Number of Features (Log Scale)")
+    plt.savefig(PLOTS_DIRECTORY / ("timing_chart_normalized_log.png" if normalize else "timing_chart_log.png"))
     plt.close()
 
 

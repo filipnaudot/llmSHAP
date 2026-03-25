@@ -1,6 +1,7 @@
 import os, json
 from dataclasses import asdict
 import threading
+from concurrent.futures import Future
 
 from llmSHAP.types import ResultMapping, Optional
 from llmSHAP.value_functions import ValueFunction
@@ -47,25 +48,41 @@ class AttributionFunction:
         return {key: {"value": value["value"], "score": value["score"] / total} for key, value in self.result.items()}
     
     def _get_output(self, coalition) -> Generation:
-        frozen_coalition = frozenset(coalition)
+        effective_coalition = set(coalition) | self.data_handler.permanent_indexes
+        frozen_coalition = frozenset(effective_coalition)
+        owner = False
+        future: Future[Generation] | None = None
         if self.use_cache:
             with self._cache_lock:
-                if frozen_coalition in self.cache:
-                    return self.cache[frozen_coalition]
-        
-        prompt = self.prompt_codec.build_prompt(self.data_handler, coalition)
-        tools = self.prompt_codec.get_tools(self.data_handler, coalition)
-        images = self.prompt_codec.get_images(self.data_handler, coalition)
-        generation = self.model.generate(prompt, tools=tools, images=images)
-        parsed_generation: Generation = self.prompt_codec.parse_generation(generation)
-        
-        if self.use_cache:
+                cached = self.cache.get(frozen_coalition)
+                if isinstance(cached, Future): future = cached
+                elif cached is not None:
+                    return cached
+                else:
+                    future = Future()
+                    self.cache[frozen_coalition] = future
+                    owner = True
+            if future is not None and not owner:
+                return future.result()
+        try:
+            prompt = self.prompt_codec.build_prompt(self.data_handler, coalition)
+            tools = self.prompt_codec.get_tools(self.data_handler, coalition)
+            images = self.prompt_codec.get_images(self.data_handler, coalition)
+            generation = self.model.generate(prompt, tools=tools, images=images)
+            parsed_generation: Generation = self.prompt_codec.parse_generation(generation)
+        except Exception as exc:
+            if self.use_cache and future is not None and owner:
+                future.set_exception(exc)
+                with self._cache_lock:
+                    if self.cache.get(frozen_coalition) is future:
+                        self.cache.pop(frozen_coalition, None)
+            raise
+        if self.use_cache and future is not None and owner:
+            future.set_result(parsed_generation)
             with self._cache_lock:
                 self.cache[frozen_coalition] = parsed_generation
-
         if self.logging:
             self._log(prompt, parsed_generation)
-        
         return parsed_generation
 
     def _log(self, prompt, parsed_generation):

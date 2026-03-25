@@ -174,15 +174,15 @@ print(handler.get_data({1}, exclude_permanent_keys=False, mask=False))
 | ------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------ |
 | Threaded                                                                  | ✅ (optional ``num_threads``)                                | ❌                              |
 | Modular architecture                                                      | ✅                                                           | ❌                              |
-| Exact Shapley option                                                      | ✅ (Full enumeration)                                        | ❌ (Monte Carlo sampling)       |
-| Generation caching across coalitions                                      | ✅                                                           | ❌                              |
 | Heuristics                                                                | SlidingWindow • Monte Carlo • Counterfactual                 | Monte Carlo                    |
+| Caching across coalitions                                      | ✅                                                           | ❌                              |
 | Sentence-/chunk-level attribution                                         | ✅                                                           | ✅                             |
 | Permanent context pinning (always-included features)                      | ✅                                                           | ❌                              |
 | Pluggable similarity metric                                               | ✅ TF-IDF, embeddings                                        | ✅ TF-IDF, embeddings          |
-| Docs & tutorial                                                           | ✅ Sphinx docs + tutorial                                    | ✅ README only                 |
+| Docs & tutorial                                                           | ✅ Docs + tutorial                                           | ✅ README only                 |
 | Unit tests & CI                                                           | ✅ Pytest + GitHub Actions                                   | ❌                              |
-| Vision object attribution                                                 | ❌                                                           | ✅ PixelSHAP                   |
+| Image attribution                                                         | ✅                                                           | ✅ PixelSHAP                   |
+| In-image attribution                                                      | ❌                                                           | ✅ PixelSHAP                   |
 
 ---
 
