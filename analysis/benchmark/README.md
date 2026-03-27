@@ -3,20 +3,20 @@
 This directory contains the similarity benchmark scripts, outputs, and checkpoint state.
 
 ## Run Benchmark
-From the `analysis/similarity` directory:
+From the `analysis/benchmark` directory:
 ```bash
-python ./benchmark_similarity.py --verbose
+python ./benchmark.py --verbose
 ```
 
 Alternatively, from the repository root:
 ```bash
-python analysis/similarity/benchmark_similarity.py --verbose
+python analysis/benchmark/benchmark.py --verbose
 ```
 
 
 ## Structure
 
-- `benchmark_similarity.py`
+- `benchmark.py`
   Runs the benchmark and writes plots, a results summary, and checkpoints.
 
 - `overlay_similarity_plots.py`
@@ -29,10 +29,10 @@ python analysis/similarity/benchmark_similarity.py --verbose
   Stores benchmark checkpoint files.
 
 - `plots/`
-  Stores plots written by `benchmark_similarity.py`.
+  Stores plots written by `benchmark.py`.
 
 - `results/`
-  Stores `RESULTS.md` written by `benchmark_similarity.py`.
+  Stores `RESULTS.md` written by `benchmark.py`.
 
 
 
@@ -46,13 +46,13 @@ python analysis/similarity/benchmark_similarity.py --verbose
 It is overwritten on each completed datapoint and can be used to resume a run with:
 
 ```bash
-python benchmark_similarity.py --start-from-checkpoint
+python benchmark.py --start-from-checkpoint
 ```
 
 You can see all available CLI options with:
 
 ```bash
-python benchmark_similarity.py --help
+python benchmark.py --help
 ```
 
 
