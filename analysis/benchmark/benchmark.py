@@ -4,9 +4,10 @@ import sys
 import time
 from pathlib import Path
 from statistics import mean
-from typing import Any
+
 if __package__ in {None, ""}: sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from llmSHAP.types import Any
 from llmSHAP import Attribution, DataHandler, BasicPromptCodec, Generation, ShapleyAttribution, EmbeddingCosineSimilarity
 from llmSHAP.llm import OpenAIInterface, DummyLLM
 from llmSHAP.attribution_methods import CounterfactualSampler, SlidingWindowSampler, FullEnumerationSampler
@@ -14,7 +15,6 @@ from data import SymptomDataset
 from utils import AttributionComparator, plot_similarities, plot_similarity_convergence, plot_timing
 
 
-SYSTEM_PROMPT = "You are a clinical reasoning assistant. Given a patient's symptoms, answer with the single most likely disease or condition along with a motivation."
 COUNTERFACTUAL_METHOD_NAME = "Counterfactual"
 SLIDING_WINDOW_METHOD_SIZE = 3; SLIDING_WINDOW_METHOD_NAME = f"Sliding window (w={SLIDING_WINDOW_METHOD_SIZE})"
 SHAPLEY_METHOD_NAME = "Shapley value"
@@ -219,7 +219,7 @@ if __name__ == "__main__":
             if args.verbose: print(f"Method: {display_name}", end="\n     ")
             shap = ShapleyAttribution(model=llm,
                                       data_handler=handler,
-                                      prompt_codec=BasicPromptCodec(system=SYSTEM_PROMPT),
+                                      prompt_codec=BasicPromptCodec(system=entry.system_prompt()),
                                       sampler=sampler,
                                       use_cache=cache,
                                       verbose=False,
