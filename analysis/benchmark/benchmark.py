@@ -194,11 +194,18 @@ if __name__ == "__main__":
     parser.add_argument("--threads", type=int, default=10, help="Number of threads for coalition evaluation. Default is 10.")
     parser.add_argument("--debug", action="store_true", help="Print full outputs and attribution details.")
     parser.add_argument("--verbose", action="store_true", help="Print progress and timing information.")
+    llm_group = parser.add_mutually_exclusive_group()
+    llm_group.add_argument("--dummy_llm", action="store_true", help="Use dummy LLM interface.")
+    llm_group.add_argument("--reasoning", action="store_true", help="Use reasoning model.")
     args = parser.parse_args()
 
-    # llm = OpenAIInterface(model_name="gpt-4.1-mini", temperature=0.2, max_tokens=64)
-    llm = OpenAIInterface(model_name="gpt-4.1-mini", temperature=0.0, max_tokens=64)
-    # llm = DummyLLM(model_name="model", random=True)
+
+    llm = OpenAIInterface(model_name="gpt-4.1-mini", temperature=0.2, max_tokens=64)
+    if args.dummy_llm:
+        llm = DummyLLM(model_name="Dummy model", random=False)
+    elif args.reasoning:
+        llm = OpenAIInterface(model_name="gpt-5.4-nano", max_tokens=64)
+    if args.verbose: print(f"Model: {llm.model_name}")
     
     checkpoint = _load_checkpoint() if args.start_from_checkpoint else None
     if checkpoint is None:
