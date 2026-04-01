@@ -47,7 +47,6 @@ class AttributionComparator:
     def _summarize_by_feature_count(self, similarities_by_feature_count):
         if not similarities_by_feature_count:
             return None
-
         sorted_feature_counts = sorted(similarities_by_feature_count)
         mean_similarities = [
             mean(similarities_by_feature_count[feature_count])

@@ -9,7 +9,7 @@ if __package__ in {None, ""}: sys.path.insert(0, str(Path(__file__).resolve().pa
 
 from llmSHAP.types import Any
 from llmSHAP import Attribution, DataHandler, BasicPromptCodec, Generation, ShapleyAttribution, EmbeddingCosineSimilarity
-from llmSHAP.llm import OpenAIInterface, DummyLLM
+from llmSHAP.llm import OpenAIInterface, DummyLLM, LLMInterface
 from llmSHAP.attribution_methods import CounterfactualSampler, SlidingWindowSampler, FullEnumerationSampler
 from data import SymptomDataset
 from utils import AttributionComparator, plot_similarities, plot_similarity_convergence, plot_timing
@@ -96,7 +96,7 @@ def _load_checkpoint() -> dict[str, Any] | None:
     timing_results = checkpoint.get("timing", {})
     attribution_results = checkpoint.get("attribution_results", {})
     results = {}
-    for method_name, _, use_cache in create_samplers([]):
+    for method_name, _, use_cache in _create_samplers([]):
         display_name = _format_method_name(method_name, use_cache)
         method_timings = timing_results.get(display_name, timing_results.get(method_name, []))
         method_attributions = attribution_results.get(display_name, attribution_results.get(method_name, []))
@@ -129,7 +129,7 @@ def _write_results_markdown(results: dict[str, list[dict[str, Any]]], model_name
         for feature_count in feature_counts
     } if results.get(gold_method_name) else {}
     table_rows = []
-    for method_name, _, use_cache in create_samplers([]):
+    for method_name, _, use_cache in _create_samplers([]):
         display_name = _format_method_name(method_name, use_cache)
         method_results = results.get(display_name, [])
         if not method_results:
@@ -170,7 +170,7 @@ def _write_results_markdown(results: dict[str, list[dict[str, Any]]], model_name
     with RESULTS_PATH.open("w", encoding="utf-8") as f: f.write(markdown)
 
 
-def create_samplers(players: list[int]) -> list[tuple[str, Any, bool]]:
+def _create_samplers(players: list[int]) -> list[tuple[str, Any, bool]]:
     """Create the sampler configuration.
 
     Args:
@@ -187,6 +187,19 @@ def create_samplers(players: list[int]) -> list[tuple[str, Any, bool]]:
             (SHAPLEY_METHOD_NAME, FullEnumerationSampler(len(players)), False),]
     
 
+def _get_llm(args: argparse.Namespace) -> tuple[LLMInterface, str]:
+    model_name: str = "gpt-4.1-mini"
+    llm: LLMInterface = OpenAIInterface(model_name=model_name, temperature=0.2, max_tokens=64)
+    if args.dummy_llm:
+        model_name = "Dummy model"
+        llm = DummyLLM(model_name=model_name, random=False)
+    elif args.reasoning:
+        model_name = "gpt-5-nano"
+        llm = OpenAIInterface(model_name=model_name, reasoning="low", max_tokens=1024)
+    return llm, model_name
+
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -199,17 +212,13 @@ if __name__ == "__main__":
     llm_group.add_argument("--reasoning", action="store_true", help="Use reasoning model.")
     args = parser.parse_args()
 
-
-    llm = OpenAIInterface(model_name="gpt-4.1-mini", temperature=0.2, max_tokens=64)
-    if args.dummy_llm:
-        llm = DummyLLM(model_name="Dummy model", random=False)
-    elif args.reasoning:
-        llm = OpenAIInterface(model_name="gpt-5.4-nano", max_tokens=64)
-    if args.verbose: print(f"Model: {llm.model_name}")
+    llm, model_name = _get_llm(args)
+    if args.verbose:
+        print(f"Model: {model_name}")
     
     checkpoint = _load_checkpoint() if args.start_from_checkpoint else None
     if checkpoint is None:
-        results = {_format_method_name(method_name, use_cache): [] for method_name, _, use_cache in create_samplers([])}
+        results = {_format_method_name(method_name, use_cache): [] for method_name, _, use_cache in _create_samplers([])}
         start_index = 0
     else:
         results = checkpoint["results"]
@@ -220,7 +229,7 @@ if __name__ == "__main__":
         handler = _build_data_handler(entry)
         players = handler.get_keys(exclude_permanent_keys=True)
         if args.verbose: print(f"\n\nFeatures: {len(players)}")
-        samplers = create_samplers(players)
+        samplers = _create_samplers(players)
         for name, sampler, cache in samplers:
             display_name = _format_method_name(name, cache)
             if args.verbose: print(f"Method: {display_name}", end="\n     ")
@@ -252,4 +261,4 @@ if __name__ == "__main__":
         plot_similarity_convergence(similarities)
         plot_timing(results, normalize=True)
         _write_checkpoint(data_index, results)
-        _write_results_markdown(results, llm.model_name)
+        _write_results_markdown(results, model_name)

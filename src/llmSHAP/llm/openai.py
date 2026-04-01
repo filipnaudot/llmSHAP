@@ -20,7 +20,7 @@ class OpenAIInterface(LLMInterface):
         than inheriting the OpenAI SDK's default timeout.
 
         :param model_name: OpenAI model identifier to use for generation.
-        :param temperature: Sampling temperature for Responses API requests.
+        :param temperature: Sampling temperature. Set to None (default) to omit the parameter for models that do not support temperature.
         :param max_tokens: Maximum number of output tokens to request.
         :param reasoning: Optional reasoning effort for reasoning-capable models.
         :param max_retries: Number of llmSHAP-managed retries after the initial request.
@@ -31,7 +31,7 @@ class OpenAIInterface(LLMInterface):
     def __init__(self,
                  *,
                  model_name: str,
-                 temperature: float = 0.0,
+                 temperature: Optional[float] = None,
                  max_tokens: int = 512,
                  reasoning: Optional[str] = None,
                  max_retries: int = 5,
@@ -49,7 +49,8 @@ class OpenAIInterface(LLMInterface):
         
         load_dotenv()
         api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key: raise RuntimeError("OPENAI_API_KEY is not set. Set it (e.g. in your .env) before using OpenAIInterface.")
+        if not api_key:
+            raise RuntimeError("OPENAI_API_KEY is not set. Set it (e.g. in your .env) before using OpenAIInterface.")
         self.client: OpenAI = OpenAI(api_key=api_key, max_retries=1, timeout=timeout)
         self.model_name = model_name
         self.temperature = temperature
@@ -69,7 +70,7 @@ class OpenAIInterface(LLMInterface):
         }
         if self.reasoning is not None:
             kwargs["reasoning"] = self.reasoning # type: ignore[assignment]
-        else:
+        elif self.temperature is not None:
             kwargs["temperature"] = self.temperature
         return self._generate_with_retries(kwargs)
 

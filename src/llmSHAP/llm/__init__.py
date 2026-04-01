@@ -4,10 +4,13 @@ from typing import overload
 __all__ = ["OpenAIInterface", "LangChainInterface", "DummyLLM"]
 
 if TYPE_CHECKING:
+    from .llm_interface import LLMInterface
     from .openai import OpenAIInterface
     from .langchain import LangChainInterface
     from .dummy import DummyLLM
 
+    @overload
+    def __getattr__(name: str) -> type[LLMInterface]: ...
     @overload
     def __getattr__(name: str) -> type[OpenAIInterface]: ...
     @overload
@@ -15,7 +18,11 @@ if TYPE_CHECKING:
     @overload
     def __getattr__(name: str) -> type[DummyLLM]: ...
 
+
 def __getattr__(name: str):
+    if name == "LLMInterface":
+        from .llm_interface import LLMInterface
+        return LLMInterface
     if name == "OpenAIInterface":
         from .openai import OpenAIInterface
         return OpenAIInterface
