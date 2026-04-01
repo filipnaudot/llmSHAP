@@ -44,6 +44,20 @@ class AttributionComparator:
         magnitude_b = math.sqrt(sum(value * value for value in vector_b))
         return 0.0 if magnitude_a == 0.0 or magnitude_b == 0.0 else dot_product / (magnitude_a * magnitude_b)
 
+    def _summarize_by_feature_count(self, similarities_by_feature_count):
+        if not similarities_by_feature_count:
+            return None
+        sorted_feature_counts = sorted(similarities_by_feature_count)
+        mean_similarities = [
+            mean(similarities_by_feature_count[feature_count])
+            for feature_count in sorted_feature_counts
+        ]
+        return {
+            "min_similarity": min(mean_similarities),
+            "max_similarity": max(mean_similarities),
+            "spread": max(mean_similarities) - min(mean_similarities),
+        }
+
     def compare(self, attribution_data):
         gold_entries = attribution_data[self.gold_method_name]
         number_of_datapoints = len(gold_entries)
@@ -90,6 +104,7 @@ class AttributionComparator:
                     feature_count: mean(similarities)
                     for feature_count, similarities in similarities_by_feature_count.items()
                 },
+                "feature_count_summary": self._summarize_by_feature_count(similarities_by_feature_count),
             }
         return similarity_results_by_method
 
