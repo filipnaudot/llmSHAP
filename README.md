@@ -107,7 +107,7 @@ For the local backend, install the `embeddings` extra:
 pip install "llmshap[embeddings]"
 ```
 
-The example below uses the API backend, which is already included in `[all]`.
+The example below uses the OpenAI API backend, which is already included in `[all]`.
 
 ```python
 from llmSHAP import DataHandler, BasicPromptCodec, ShapleyAttribution, EmbeddingCosineSimilarity
