@@ -16,13 +16,13 @@ A multi-threaded explainability framework using Shapley values for LLM-based out
 <p align="center">
   <picture>
     <source
-      srcset="docs/_static/contribution-illustration-dark-mode.png"
+      srcset="docs/_static/contribution-illustration-darkmode.png"
       media="(prefers-color-scheme: dark)" />
     <source
-      srcset="docs/_static/contribution-illustration-lightmode-mode.png"
+      srcset="docs/_static/contribution-illustration-lightmode.png"
       media="(prefers-color-scheme: light)" />
     <img
-      src="docs/_static/contribution-illustration-lightmode-mode.png"
+      src="docs/_static/contribution-illustration-lightmode.png"
       alt="llmSHAP contribution illustration"
       width="60%"/>
   </picture>
