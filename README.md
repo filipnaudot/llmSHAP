@@ -24,7 +24,7 @@ A multi-threaded explainability framework using Shapley values for LLM-based out
     <img
       src="docs/_static/contribution-illustration-lightmode.png"
       alt="llmSHAP contribution illustration"
-      width="80%"/>
+      width="70%"/>
   </picture>
 </p>
 
