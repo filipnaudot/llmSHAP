@@ -12,7 +12,22 @@
 
 A multi-threaded explainability framework using Shapley values for LLM-based outputs.
 
----
+
+<p align="center">
+  <picture>
+    <source
+      srcset="docs/_static/contribution-illustration-dark-mode.png"
+      media="(prefers-color-scheme: dark)" />
+    <source
+      srcset="docs/_static/contribution-illustration-lightmode-mode.png"
+      media="(prefers-color-scheme: light)" />
+    <img
+      src="docs/_static/contribution-illustration-lightmode-mode.png"
+      alt="llmSHAP contribution illustration"
+      width="60%"/>
+  </picture>
+</p>
+
 
 ## Getting Started
 Install the `llmshap` package (with all optional dependencies):

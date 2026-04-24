@@ -2,7 +2,6 @@ test.py
 playground.py
 .DS_Store
 .vscode
-*.png
 *.jsonl
 *logs
 
