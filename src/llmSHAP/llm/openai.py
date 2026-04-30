@@ -72,7 +72,7 @@ class OpenAIInterface(LLMInterface):
         }
         if self.reasoning is not None:
             kwargs["reasoning"] = self.reasoning # type: ignore[assignment]
-        if self.temperature is not None:
+        elif self.temperature is not None:
             kwargs["temperature"] = self.temperature
         if self.text_format is not None:
             kwargs["text_format"] = self.text_format
