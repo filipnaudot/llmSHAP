@@ -34,6 +34,7 @@ class OpenAIInterface(LLMInterface):
                  temperature: Optional[float] = None,
                  max_tokens: int = 512,
                  reasoning: Optional[str] = None,
+                 text_format: Optional[Any] = None,
                  max_retries: int = 5,
                  timeout: float = 600.0,
                  backoff_base: float = 1.0,
@@ -56,6 +57,7 @@ class OpenAIInterface(LLMInterface):
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.reasoning = {"effort": reasoning} if reasoning is not None else None
+        self.text_format = text_format
         self.max_retries = max_retries
         self.backoff_base = backoff_base
         self.backoff_max = backoff_max
@@ -72,6 +74,8 @@ class OpenAIInterface(LLMInterface):
             kwargs["reasoning"] = self.reasoning # type: ignore[assignment]
         elif self.temperature is not None:
             kwargs["temperature"] = self.temperature
+        if self.text_format is not None:
+            kwargs["text_format"] = self.text_format
         return self._generate_with_retries(kwargs)
 
 
