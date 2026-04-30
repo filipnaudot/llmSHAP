@@ -23,8 +23,7 @@ class AttributionFunction:
                  verbose: bool = True,
                  logging: bool = False,
                  log_filename: str = "log",
-                 value_function: Optional[ValueFunction] = None,
-                 ):
+                 value_function: Optional[ValueFunction] = None):
         self.model = model
         self.data_handler = data_handler
         self.prompt_codec = prompt_codec
