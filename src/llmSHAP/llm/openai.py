@@ -19,10 +19,28 @@ class OpenAIInterface(LLMInterface):
         Requests use an explicit default timeout of ``600.0`` seconds (10 minutes) rather
         than inheriting the OpenAI SDK's default timeout.
 
+        Output modes
+        ------------
+        ``OpenAIInterface`` supports two output modes depending on ``text_format``:
+
+        - ``text_format=None`` (default): uses ``client.responses.create(...)`` and returns
+          plain text via ``response.output_text``. This mode works out of the box with
+          ``BasicPromptCodec`` and the built-in text-based value functions.
+        - ``text_format is not None``: uses ``client.responses.parse(...)`` and returns
+          ``response.output_parsed``. In this mode, callers are responsible for providing
+          a ``PromptCodec`` that can consume the parsed object returned by the OpenAI SDK.
+
+        In other words, structured outputs are opt-in. If you pass ``text_format``, you
+        are also responsible for ensuring the rest of your llmSHAP pipeline knows how to
+        parse and score that output shape by implementing a custom ``PromptCodec``.
+
         :param model_name: OpenAI model identifier to use for generation.
         :param temperature: Sampling temperature. Set to None (default) to omit the parameter for models that do not support temperature.
         :param max_tokens: Maximum number of output tokens to request.
         :param reasoning: Optional reasoning effort for reasoning-capable models.
+        :param text_format: Optional structured output schema. When omitted, generations are
+            returned as plain text. When provided, the OpenAI SDK parse path is used and the
+            parsed object is returned instead.
         :param max_retries: Number of llmSHAP-managed retries after the initial request.
         :param timeout: Request timeout in seconds passed to the underlying OpenAI client.
         :param backoff_base: Base delay in seconds for exponential backoff.
@@ -63,7 +81,7 @@ class OpenAIInterface(LLMInterface):
         self.backoff_max = backoff_max
 
 
-    def generate(self, prompt: Any, tools: Optional[list[Any]] = None, images: Optional[list[Any]] = None,) -> str:
+    def generate(self, prompt: Any, tools: Optional[list[Any]] = None, images: Optional[list[Any]] = None,) -> Any:
         if images: prompt = self._attach_images(prompt, images)
         kwargs = {
             "model": self.model_name,
@@ -79,12 +97,17 @@ class OpenAIInterface(LLMInterface):
         return self._generate_with_retries(kwargs)
 
 
-    def _generate_with_retries(self, kwargs: dict[str, Any]) -> str:
+    def _generate_with_retries(self, kwargs: dict[str, Any]) -> Any:
         from openai import APIConnectionError, APITimeoutError, InternalServerError, RateLimitError
         for attempt in range(self.max_retries + 1):
             try:
-                response = self.client.responses.create(**kwargs) # type: ignore[arg-type]
-                return response.output_text or ""
+                # response = self.client.responses.create(**kwargs) # type: ignore[arg-type]
+                # return response.output_text or ""
+                if self.text_format is None:
+                    response = self.client.responses.create(**kwargs)
+                    return response.output_text or ""
+                response = self.client.responses.parse(**kwargs)
+                return response.output_parsed
             except RateLimitError as exc:
                 if self._is_quota_exhausted(exc):
                     raise RuntimeError(self._format_error(

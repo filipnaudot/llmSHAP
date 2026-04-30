@@ -14,21 +14,9 @@ class PromptCodec(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def parse_generation(self, model_output: str) -> Generation:
+    def parse_generation(self, model_output: Any) -> Generation:
         """(Decode) Parse model generation into a structured result."""
         raise NotImplementedError
-
-    def get_tools(self, data_handler: DataHandler, indexes: IndexSelection) -> list[Any]:
-        """Retreive the available tools at the given indexes.
-           Defaults to an emty list.
-        """
-        return []
-
-    def get_images(self, data_handler: DataHandler, indexes: IndexSelection) -> list[Any]:
-        """Retreive the available images at the given indexes.
-           Defaults to an emty list.
-        """
-        return []
 
 
 class BasicPromptCodec(PromptCodec):
@@ -40,12 +28,6 @@ class BasicPromptCodec(PromptCodec):
             {"role": "system", "content": self.system},
             {"role": "user",   "content": data_handler.to_string(indexes)}
         ]
-    
-    def get_tools(self, data_handler: DataHandler, indexes: IndexSelection) -> list[Any]:
-        return data_handler.tool_list(indexes)
-
-    def get_images(self, data_handler: DataHandler, indexes: IndexSelection) -> list[Any]:
-        return data_handler.image_list(indexes)
     
     def parse_generation(self, model_output: str) -> Generation:
         return Generation(output=model_output)
