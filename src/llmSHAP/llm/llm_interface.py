@@ -8,6 +8,6 @@ class LLMInterface(ABC):
                  prompt: Any,
                  tools: Optional[list[Any]] = None,
                  images: Optional[list[Any]] = None,
-                 ) -> str:
+                 ) -> Any:
         pass
     

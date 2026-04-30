@@ -1,14 +1,16 @@
 import os, json
 from dataclasses import asdict
 import threading
+import warnings
 from concurrent.futures import Future
 
 from llmSHAP.types import ResultMapping, Optional
 from llmSHAP.value_functions import ValueFunction
 from llmSHAP.llm.llm_interface import LLMInterface
+from llmSHAP.llm.openai import OpenAIInterface
 
 from llmSHAP.data_handler import DataHandler
-from llmSHAP.prompt_codec import PromptCodec
+from llmSHAP.prompt_codec import PromptCodec, BasicPromptCodec
 from llmSHAP.generation import Generation
 from llmSHAP.value_functions import TFIDFCosineSimilarity
 
@@ -32,6 +34,9 @@ class AttributionFunction:
         self.logging = logging
         self.log_filename = log_filename
         self.value_function = value_function or TFIDFCosineSimilarity()
+        if isinstance(self.model, OpenAIInterface) and self.model.text_format is not None and isinstance(self.prompt_codec, BasicPromptCodec):
+            warnings.warn("OpenAIInterface with text_format set may be incompatible with BasicPromptCodec. "
+                          "Provide a custom PromptCodec that can parse structured outputs.", stacklevel=2)
         ####
         self.cache = {}
         self._cache_lock = threading.Lock()
@@ -65,8 +70,8 @@ class AttributionFunction:
                 return future.result()
         try:
             prompt = self.prompt_codec.build_prompt(self.data_handler, coalition)
-            tools = self.prompt_codec.get_tools(self.data_handler, coalition)
-            images = self.prompt_codec.get_images(self.data_handler, coalition)
+            tools = self.data_handler.tool_list(coalition) # self.prompt_codec.get_tools(self.data_handler, coalition)
+            images = self.data_handler.image_list(coalition) # self.prompt_codec.get_images(self.data_handler, coalition)
             generation = self.model.generate(prompt, tools=tools, images=images)
             parsed_generation: Generation = self.prompt_codec.parse_generation(generation)
         except Exception as exc:

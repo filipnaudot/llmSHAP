@@ -32,7 +32,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-openai     = ["openai", "python-dotenv"]
+openai     = ["openai >= 2.8.1", "python-dotenv"]
 embeddings = ["sentence-transformers", "numpy"]
 dev        = ["pytest", "matplotlib", "ipywidgets", "sphinx", "myst-parser", "sphinx-book-theme", "sphinx-design"]
 all        = ["openai", "python-dotenv", "numpy"]
