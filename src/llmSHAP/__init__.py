@@ -10,6 +10,7 @@ __all__ = [
     "TFIDFCosineSimilarity",
     "EmbeddingCosineSimilarity",
     "ShapleyAttribution",
+    "StratifiedSampler",
     "Attribution",
     "Image",
 ]
@@ -20,6 +21,7 @@ if TYPE_CHECKING:
     from .generation import Generation
     from .value_functions import ValueFunction, TFIDFCosineSimilarity, EmbeddingCosineSimilarity
     from .attribution_methods.shapley_attribution import ShapleyAttribution
+    from .attribution_methods.coalition_sampler import StratifiedSampler
     from .attribution import Attribution
     from .image import Image
 
@@ -39,6 +41,8 @@ if TYPE_CHECKING:
     def __getattr__(name: str) -> type[EmbeddingCosineSimilarity]: ...
     @overload
     def __getattr__(name: str) -> type[ShapleyAttribution]: ...
+    @overload
+    def __getattr__(name: str) -> type[StratifiedSampler]: ...
     @overload
     def __getattr__(name: str) -> type[Attribution]: ...
     @overload
@@ -64,6 +68,9 @@ def __getattr__(name: str):
     if name == "ShapleyAttribution":
         from .attribution_methods.shapley_attribution import ShapleyAttribution
         return ShapleyAttribution
+    if name == "StratifiedSampler":
+        from .attribution_methods.coalition_sampler import StratifiedSampler
+        return StratifiedSampler
     if name == "Attribution":
         from .attribution import Attribution
         return Attribution
