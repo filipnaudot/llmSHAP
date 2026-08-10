@@ -207,4 +207,10 @@ print(handler.get_data({1}, exclude_permanent_keys=False, mask=False))
 
 # Stars ⭐️
 
-[![Star History Chart](https://api.star-history.com/svg?repos=filipnaudot/llmSHAP&type=Date&legend=top-left)](https://www.star-history.com/#filipnaudot/llmSHAP&type=date&legend=top-left)
+<a href="https://www.star-history.com/?repos=filipnaudot%2Fllmshap&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=filipnaudot/llmshap&type=date&theme=dark&legend=top-left&sealed_token=OUisXRdK-9Noe5aSMguLoHTp8xnv-DXyEhedLWzYN0nyx7XoAXMhGb-ShxhzxBx6P1qlqH-R6xgGo1NOgJ3OQkDfkzR_aZ3qYFAY9JwREgqygq_7PoCfpNUTO5X2bb3LW7drOh5k7Icwv1ltrWt-r4xZYMww3iYeRt6WDNk4XoUC5CoY9pWO3SJR9zGG" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=filipnaudot/llmshap&type=date&legend=top-left&sealed_token=OUisXRdK-9Noe5aSMguLoHTp8xnv-DXyEhedLWzYN0nyx7XoAXMhGb-ShxhzxBx6P1qlqH-R6xgGo1NOgJ3OQkDfkzR_aZ3qYFAY9JwREgqygq_7PoCfpNUTO5X2bb3LW7drOh5k7Icwv1ltrWt-r4xZYMww3iYeRt6WDNk4XoUC5CoY9pWO3SJR9zGG" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=filipnaudot/llmshap&type=date&legend=top-left&sealed_token=OUisXRdK-9Noe5aSMguLoHTp8xnv-DXyEhedLWzYN0nyx7XoAXMhGb-ShxhzxBx6P1qlqH-R6xgGo1NOgJ3OQkDfkzR_aZ3qYFAY9JwREgqygq_7PoCfpNUTO5X2bb3LW7drOh5k7Icwv1ltrWt-r4xZYMww3iYeRt6WDNk4XoUC5CoY9pWO3SJR9zGG" />
+ </picture>
+</a>
