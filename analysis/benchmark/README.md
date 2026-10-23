@@ -1,22 +1,37 @@
-# Similarity
+# Attribution and runtime benchmarks
+
+## Attribution accuracy and variation
+
+The attribution_benchmark.py runner compares methods on shared coalition payoffs
+and measures variation across fresh runs, using all-MiniLM-L6-v2 embeddings.
+See [ATTRIBUTION_BENCHMARK.md](ATTRIBUTION_BENCHMARK.md) for setup, outputs, and recovery.
+
+From the repository root, preview its workload without API calls or model downloads:
+
+~~~bash
+env/bin/python analysis/benchmark/attribution_benchmark.py plan
+~~~
+
+runtime_benchmark.py retains the earlier runtime experiment described below.
+Generated checkpoints, plots, and results are excluded from Git.
 
 This directory contains the similarity benchmark scripts, outputs, and checkpoint state.
 
 ## Run Benchmark
 From the `analysis/benchmark` directory:
 ```bash
-python ./benchmark.py --verbose
+python ./runtime_benchmark.py --verbose
 ```
 
 Alternatively, from the repository root:
 ```bash
-python analysis/benchmark/benchmark.py --verbose
+python analysis/benchmark/runtime_benchmark.py --verbose
 ```
 
 
 ## Structure
 
-- `benchmark.py`
+- `runtime_benchmark.py`
   Runs the benchmark and writes plots, a results summary, and checkpoints.
 
 - `overlay_similarity_plots.py`
@@ -29,10 +44,10 @@ python analysis/benchmark/benchmark.py --verbose
   Stores benchmark checkpoint files.
 
 - `plots/`
-  Stores plots written by `benchmark.py`.
+  Stores plots written by `runtime_benchmark.py`.
 
 - `results/`
-  Stores `RESULTS.md` written by `benchmark.py`.
+  Stores `RESULTS.md` written by `runtime_benchmark.py`.
 
 
 
@@ -46,13 +61,13 @@ python analysis/benchmark/benchmark.py --verbose
 It is overwritten on each completed datapoint and can be used to resume a run with:
 
 ```bash
-python benchmark.py --start-from-checkpoint
+python runtime_benchmark.py --start-from-checkpoint
 ```
 
 You can see all available CLI options with:
 
 ```bash
-python benchmark.py --help
+python runtime_benchmark.py --help
 ```
 
 

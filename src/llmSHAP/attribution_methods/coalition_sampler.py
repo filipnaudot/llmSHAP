@@ -1,7 +1,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from itertools import combinations
-from math import ceil, comb, factorial
+from math import floor, comb, factorial
 import random
 
 from llmSHAP.types import Index, Iterable, Set, Dict, Tuple, List
@@ -101,7 +101,7 @@ class StratifiedSampler(CoalitionSampler):
         num_strata = len(others) + 1
         for coalition_size in range(num_strata):
             total_count = comb(len(others), coalition_size)
-            sample_count = ceil(self.sampling_ratio * total_count)
+            sample_count = max(1, floor(self.sampling_ratio * total_count))
             weight = 1.0 / (num_strata * sample_count)
             for coalition in self._sample_coalitions(others, coalition_size, sample_count,total_count):
                 yield coalition, weight
