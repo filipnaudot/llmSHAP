@@ -2,28 +2,32 @@ import argparse
 import json
 import sys
 import time
+from datetime import datetime
 from pathlib import Path
 from statistics import mean
 
-if __package__ in {None, ""}: sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 from llmSHAP.types import Any
-from llmSHAP import Attribution, DataHandler, BasicPromptCodec, Generation, ShapleyAttribution, EmbeddingCosineSimilarity
+from llmSHAP import Attribution, DataHandler, BasicPromptCodec, Generation, ShapleyAttribution, TFIDFCosineSimilarity
 from llmSHAP.llm import OpenAIInterface, DummyLLM, LLMInterface
-from llmSHAP.attribution_methods import CounterfactualSampler, SlidingWindowSampler, FullEnumerationSampler
+from llmSHAP.attribution_methods import CounterfactualSampler, SlidingWindowSampler, FullEnumerationSampler, StratifiedSampler
 from data import SymptomDataset
-from utils import AttributionComparator, plot_similarities, plot_similarity_convergence, plot_timing
+import utils as benchmark_utils
 
 
 COUNTERFACTUAL_METHOD_NAME = "Counterfactual"
 SLIDING_WINDOW_METHOD_SIZE = 3; SLIDING_WINDOW_METHOD_NAME = f"Sliding window (w={SLIDING_WINDOW_METHOD_SIZE})"
+STRATIFIED_SAMPLING_RATIO_02 = 0.2; STRATIFIED_METHOD_NAME_02 = f"Stratified (ratio={STRATIFIED_SAMPLING_RATIO_02})"
+STRATIFIED_SAMPLING_RATIO_06 = 0.6; STRATIFIED_METHOD_NAME_06 = f"Stratified (ratio={STRATIFIED_SAMPLING_RATIO_06})"
 SHAPLEY_METHOD_NAME = "Shapley value"
 GOLD_STANDARD_CONFIG = (SHAPLEY_METHOD_NAME, False)
 
+RUN_TIMESTAMP = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
 CHECKPOINTS_DIRECTORY = Path(__file__).resolve().parent / "checkpoints"
-CHECKPOINT_PATH = CHECKPOINTS_DIRECTORY / "checkpoint.json"
 RESULTS_DIRECTORY = Path(__file__).resolve().parent / "results"
-RESULTS_PATH = RESULTS_DIRECTORY / "RESULTS.md"
 
 
 
@@ -57,40 +61,49 @@ def _format_method_name(method_name: str, use_cache: bool) -> str:
     return f"{method_name} (cache)" if use_cache else method_name
 
 
-def _calculate_efficiency(attribution_result: Attribution) -> float:
+def _calculate_efficiency(attribution_result: Attribution) -> float | None:
     """Return efficiency as a percentage.
 
     Args:
         attribution_result: Attribution output.
 
     Returns:
-        Efficiency percentage.
+        Efficiency percentage, or ``None`` when the denominator is zero.
     """
     attribution_total = attribution_result.empty_baseline + sum([value["score"] for value in attribution_result.attribution.values()])
-    return (attribution_result.grand_coalition_value / attribution_total) * 100
+    return None if attribution_total == 0 else (attribution_result.grand_coalition_value / attribution_total) * 100
     
 
-def _write_checkpoint(data_index: int, results: dict[str, list[dict[str, Any]]]) -> None:
+def _write_checkpoint(data_index: int, results: dict[str, list[dict[str, Any]]],
+                      num_coalition_evaluations: int) -> None:
     """Persist the current benchmark state.
 
     Args:
         data_index: Last completed datapoint index.
         results: Collected benchmark results.
+        num_coalition_evaluations: Evaluations per coalition payoff.
     """
     CHECKPOINTS_DIRECTORY.mkdir(exist_ok=True)
-    entry = {"data_index": data_index, "results": results}
-    with CHECKPOINT_PATH.open("w", encoding="utf-8") as f:
+    entry = {"data_index": data_index,
+             "run_timestamp": RUN_TIMESTAMP,
+             "num_coalition_evaluations": num_coalition_evaluations,
+             "results": results}
+    checkpoint_path = CHECKPOINTS_DIRECTORY / f"checkpoint_{RUN_TIMESTAMP}.json"
+    with checkpoint_path.open("w", encoding="utf-8") as f:
         json.dump(entry, f, default=str)
 
 
 def _load_checkpoint() -> dict[str, Any] | None:
-    """Load a checkpoint and normalize legacy format.
+    """Load the latest checkpoint and normalize legacy format.
 
     Returns:
         Checkpoint dict or ``None``.
     """
-    if not CHECKPOINT_PATH.exists(): return None
-    with CHECKPOINT_PATH.open(encoding="utf-8") as f:
+    checkpoint_path = max(CHECKPOINTS_DIRECTORY.glob("checkpoint_*.json"),
+                          key=lambda path: path.stat().st_mtime_ns,
+                          default=CHECKPOINTS_DIRECTORY / "checkpoint.json")
+    if not checkpoint_path.exists(): return None
+    with checkpoint_path.open(encoding="utf-8") as f:
         checkpoint = json.load(f)
     if "results" in checkpoint: return checkpoint
     timing_results = checkpoint.get("timing", {})
@@ -113,16 +126,18 @@ def _load_checkpoint() -> dict[str, Any] | None:
     return checkpoint
 
 
-def _write_results_markdown(results: dict[str, list[dict[str, Any]]], model_name: str) -> None:
+def _write_results_markdown(results: dict[str, list[dict[str, Any]]], model_name: str,
+                            num_coalition_evaluations: int) -> None:
     """Write the benchmark summary table.
 
     Args:
         results: Collected benchmark results.
         model_name: Evaluated model name.
+        num_coalition_evaluations: Evaluations per coalition payoff.
     """
     RESULTS_DIRECTORY.mkdir(exist_ok=True)
     gold_method_name = _format_method_name(*GOLD_STANDARD_CONFIG)
-    similarities = AttributionComparator(gold_method_name=gold_method_name).compare(results)
+    similarities = benchmark_utils.AttributionComparator(gold_method_name=gold_method_name).compare(results)
     feature_counts = sorted({result["feature_count"] for method_results in results.values() for result in method_results})
     feature_count_frequency = {
         feature_count: sum(1 for result in results[gold_method_name] if result["feature_count"] == feature_count)
@@ -141,7 +156,8 @@ def _write_results_markdown(results: dict[str, list[dict[str, Any]]], model_name
             similarity_value = 1.0 if display_name == gold_method_name else similarities.get(display_name, {}).get("mean_similarity")
             similarity = "N/A" if similarity_value is None else f"{similarity_value:.4f}"
             average_time = f"{mean(result['time'] for result in method_results):.4f}"
-            average_efficiency = f"{mean(result['efficiency'] for result in method_results):.2f}%"
+            efficiencies = [result["efficiency"] for result in method_results if result["efficiency"] is not None]
+            average_efficiency = f"{mean(efficiencies):.2f}%" if efficiencies else "N/A"
             feature_count_summary = similarities.get(display_name, {}).get("feature_count_summary")
             if display_name == gold_method_name:
                 feature_count_spread = "0.0000"
@@ -163,11 +179,16 @@ def _write_results_markdown(results: dict[str, list[dict[str, Any]]], model_name
                 f"{feature_counts[0]}-{feature_counts[-1]} features "
                 f"(cases per count vary from {frequencies[0]} to {frequencies[-1]})"
             )
-    markdown = "\n".join(["# Benchmark Results", "", f"Feature-count coverage: {coverage_summary}", "",
+    markdown = "\n".join(["# Benchmark Results", "", f"Run: {RUN_TIMESTAMP}",
+                          f"Feature-count coverage: {coverage_summary}",
+                          f"Coalition evaluations: {num_coalition_evaluations} (cached evaluations reuse responses)",
+                          "Payoff: TF-IDF cosine similarity to a shared reference answer per case.",
+                          "Efficiency averages exclude undefined ratios (zero denominator).", "",
                           "| Method | Model | Similarity | Spread | Average Time (s) | Efficiency |",
                           "| --- | --- | ---: | ---: | ---: | ---: |",
                           *table_rows, "",])
-    with RESULTS_PATH.open("w", encoding="utf-8") as f: f.write(markdown)
+    results_path = RESULTS_DIRECTORY / f"RESULTS_{RUN_TIMESTAMP}.md"
+    with results_path.open("w", encoding="utf-8") as f: f.write(markdown)
 
 
 def _create_samplers(players: list[int]) -> list[tuple[str, Any, bool]]:
@@ -183,19 +204,23 @@ def _create_samplers(players: list[int]) -> list[tuple[str, Any, bool]]:
             (COUNTERFACTUAL_METHOD_NAME, CounterfactualSampler(), True),
             (SLIDING_WINDOW_METHOD_NAME, SlidingWindowSampler(players, w_size=SLIDING_WINDOW_METHOD_SIZE), False),
             (SLIDING_WINDOW_METHOD_NAME, SlidingWindowSampler(players, w_size=SLIDING_WINDOW_METHOD_SIZE), True),
+            (STRATIFIED_METHOD_NAME_02, StratifiedSampler(STRATIFIED_SAMPLING_RATIO_02, seed=42), False),
+            (STRATIFIED_METHOD_NAME_02, StratifiedSampler(STRATIFIED_SAMPLING_RATIO_02, seed=42), True),
+            (STRATIFIED_METHOD_NAME_06, StratifiedSampler(STRATIFIED_SAMPLING_RATIO_06, seed=42), False),
+            (STRATIFIED_METHOD_NAME_06, StratifiedSampler(STRATIFIED_SAMPLING_RATIO_06, seed=42), True),
             (SHAPLEY_METHOD_NAME, FullEnumerationSampler(len(players)), True),
             (SHAPLEY_METHOD_NAME, FullEnumerationSampler(len(players)), False),]
     
 
 def _get_llm(args: argparse.Namespace) -> tuple[LLMInterface, str]:
-    model_name: str = "gpt-4.1-mini"
-    llm: LLMInterface = OpenAIInterface(model_name=model_name, temperature=0.2, max_tokens=64)
+    model_name = "gpt-4.1-mini"
+    llm = OpenAIInterface(model_name=model_name, temperature=0.2, max_tokens=64)
     if args.dummy_llm:
         model_name = "Dummy model"
         llm = DummyLLM(model_name=model_name, random=False)
     elif args.reasoning:
         model_name = "gpt-5-nano"
-        llm = OpenAIInterface(model_name=model_name, reasoning="low", max_tokens=1024)
+        llm = OpenAIInterface(model_name=model_name, reasoning="low", max_tokens=10000)
     return llm, model_name
 
 
@@ -203,20 +228,35 @@ def _get_llm(args: argparse.Namespace) -> tuple[LLMInterface, str]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--start-from-checkpoint", action="store_true", help="Resume from the saved checkpoint.")
+    parser.add_argument("--start-from-checkpoint", action="store_true", help="Resume from the latest saved checkpoint.")
     parser.add_argument("--threads", type=int, default=10, help="Number of threads for coalition evaluation. Default is 10.")
+    parser.add_argument("--num-coalition-evaluations", type=int, default=2,
+                        help="Evaluations per coalition payoff; cached responses are reused. Default is 2.")
     parser.add_argument("--debug", action="store_true", help="Print full outputs and attribution details.")
     parser.add_argument("--verbose", action="store_true", help="Print progress and timing information.")
     llm_group = parser.add_mutually_exclusive_group()
     llm_group.add_argument("--dummy_llm", action="store_true", help="Use dummy LLM interface.")
     llm_group.add_argument("--reasoning", action="store_true", help="Use reasoning model.")
     args = parser.parse_args()
+    if args.num_coalition_evaluations < 1:
+        parser.error("--num-coalition-evaluations must be a positive integer.")
+
+    checkpoint = _load_checkpoint() if args.start_from_checkpoint else None
+    if checkpoint is not None and checkpoint.get("num_coalition_evaluations") != args.num_coalition_evaluations:
+        parser.error("The checkpoint has a missing or different coalition evaluation count. "
+                     "Use a matching --num-coalition-evaluations value or start a new benchmark.")
+
+    if checkpoint is not None:
+        RUN_TIMESTAMP = checkpoint.get("run_timestamp", RUN_TIMESTAMP)
+    benchmark_utils.PLOTS_DIRECTORY = Path(__file__).resolve().parent / "plots" / RUN_TIMESTAMP
+    benchmark_utils.PLOTS_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
     llm, model_name = _get_llm(args)
     if args.verbose:
+        print(f"Run: {RUN_TIMESTAMP}")
         print(f"Model: {model_name}")
+        print(f"Coalition evaluations: {args.num_coalition_evaluations}")
     
-    checkpoint = _load_checkpoint() if args.start_from_checkpoint else None
     if checkpoint is None:
         results = {_format_method_name(method_name, use_cache): [] for method_name, _, use_cache in _create_samplers([])}
         start_index = 0
@@ -229,6 +269,13 @@ if __name__ == "__main__":
         handler = _build_data_handler(entry)
         players = handler.get_keys(exclude_permanent_keys=True)
         if args.verbose: print(f"\n\nFeatures: {len(players)}")
+        reference_answer = None
+        similarity = TFIDFCosineSimilarity()
+
+        def score(base_generation: Generation, coalition_generation: Generation) -> float:
+            reference = base_generation if reference_answer is None else reference_answer
+            return similarity(reference, coalition_generation)
+
         samplers = _create_samplers(players)
         for name, sampler, cache in samplers:
             display_name = _format_method_name(name, cache)
@@ -239,13 +286,15 @@ if __name__ == "__main__":
                                       sampler=sampler,
                                       use_cache=cache,
                                       verbose=False,
-                                      num_threads=args.threads,)
-                                    #   value_function=EmbeddingCosineSimilarity(model_name = "text-embedding-3-small", api_url_endpoint = "https://api.openai.com/v1"))
-                                    #   value_function=EmbeddingCosineSimilarity())
+                                      num_threads=args.threads,
+                                      value_function=score, # type: ignore
+                                      num_coalition_evaluations=args.num_coalition_evaluations)
             
             start_time = time.perf_counter() # Start clock
             result = shap.attribution()
             elapsed = time.perf_counter() - start_time # Stop clock
+            if reference_answer is None:
+                reference_answer = Generation(output=result.output)
 
             if args.verbose: print(f"Time: {elapsed}")
             if args.debug: print("\n\n### OUTPUT ###"); print(result.output); print("\n\n### ATTRIBUTION ###"); print(result.attribution)
@@ -256,9 +305,9 @@ if __name__ == "__main__":
                                           "time": elapsed,
                                           "efficiency": efficiency,})
 
-        similarities = AttributionComparator(gold_method_name=_format_method_name(*GOLD_STANDARD_CONFIG)).compare(results)
-        plot_similarities(similarities)
-        plot_similarity_convergence(similarities)
-        plot_timing(results, normalize=True)
-        _write_checkpoint(data_index, results)
-        _write_results_markdown(results, model_name)
+        similarities = benchmark_utils.AttributionComparator(gold_method_name=_format_method_name(*GOLD_STANDARD_CONFIG)).compare(results)
+        benchmark_utils.plot_similarities(similarities)
+        benchmark_utils.plot_similarity_convergence(similarities)
+        benchmark_utils.plot_timing(results, normalize=True)
+        _write_checkpoint(data_index, results, args.num_coalition_evaluations)
+        _write_results_markdown(results, model_name, args.num_coalition_evaluations)
